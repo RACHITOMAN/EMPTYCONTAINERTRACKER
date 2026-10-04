@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yard Container Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"></noscript>
+<style>
+:root{--bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeede9;--text:#1a1a1a;--text2:#6b6b6b;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);--radius:8px;--radius-lg:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1c;--bg2:#252525;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#a0a0a0;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2)}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg3);min-height:100vh}
+.topbar{background:var(--bg);border-bottom:0.5px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:10}
+.app-title{font-size:16px;font-weight:500}
+.today-label{font-size:12px;color:var(--text2)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;cursor:pointer;transition:box-shadow .15s}
+.stat:hover{box-shadow:0 0 0 2px #2563eb44}
+.stat-num{font-size:22px;font-weight:500;margin-top:3px}
+.stat-label{font-size:11px;color:var(--text2)}
+.tabs{display:flex;border-bottom:0.5px solid var(--border);background:var(--bg);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:0 .5rem;overflow-x:auto}
+.tab{padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.tab.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:500}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px rgba(0,0,0,.15)}
+.field textarea{height:58px;resize:vertical}
+.btn{padding:7px 14px;font-size:13px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;font-weight:500;transition:background .1s}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn-primary:hover{opacity:.85}
+.btn-client{background:#2563eb;color:#fff;border:none}
+.btn-bulk{background:#16a34a;color:#fff;border:none}
+.btn-sm{padding:3px 9px;font-size:12px}
+.btn-danger{border-color:#E24B4A;color:#A32D2D}
+.btn-danger:hover{background:#FCEBEB}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:7px 8px;font-weight:700;font-size:14px;color:#000;background:#e2e2e2;border-bottom:0.5px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
+td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.tfoot-row td{font-weight:500;background:var(--bg2)}
+tbody tr:nth-child(even){background:#ebebeb}
+.badge{display:inline-block;padding:4px 10px;border-radius:var(--radius);font-size:13px;font-weight:600}
+.badge-in{background:#E1F5EE;color:#085041}
+.badge-out{background:#EAF3DE;color:#27500A}
+.badge-cross{background:#EEEDFE;color:#3C3489}
+.badge-inv{background:#E6F1FB;color:#0C447C}
+.badge-paid{background:#E3F6E8;color:#1D7A3C;cursor:pointer}
+.badge-unpaid{background:#FDECEC;color:#B3261E;cursor:pointer}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.filter-bar input,.filter-bar select{padding:6px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)}
+.empty{text-align:center;padding:2rem;color:var(--text2);font-size:13px}
+th[onclick]:hover{background:var(--bg3)!important;transition:background .15s}
+.op-row{display:flex;gap:8px;margin-bottom:10px}
+.op-btn{flex:1;padding:9px 4px;border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;text-align:center;font-size:12px;background:var(--bg);color:var(--text2)}
+.op-btn.sel-unload{border-color:#1D9E75;background:#E1F5EE;color:#085041;font-weight:500}
+.op-btn.sel-cross{border-color:#7F77DD;background:#EEEDFE;color:#3C3489;font-weight:500}
+.overflow-x{overflow-x:auto}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--radius-lg);border:0.5px solid var(--border);padding:1.5rem;width:460px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.info-box{padding:8px 10px;border-radius:var(--radius);font-size:12px;margin-top:8px;background:var(--bg2);color:var(--text2)}
+.client-avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.client-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.client-row:last-child{border-bottom:none}
+.client-summary{font-size:12px;color:var(--text2);margin-top:2px}
+.client-detail-panel{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-top:1rem;background:var(--bg)}
+.cdp-header{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;border-bottom:0.5px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+.cdp-tabs{display:flex;border-bottom:0.5px solid var(--border);padding:0 1rem;overflow-x:auto}
+.cdp-tab{padding:8px 14px;cursor:pointer;font-size:12px;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.cdp-tab.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:500}
+.cdp-body{padding:1rem 1.25rem}
+#login-screen{display:flex;position:fixed;inset:0;background:var(--bg3);z-index:999;align-items:center;justify-content:center}
+.login-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.login-title{font-size:20px;font-weight:600;margin-bottom:.25rem;text-align:center}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;text-align:center}
+.user-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.user-btn{padding:18px 10px;font-size:15px;font-weight:600;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;transition:background .1s,border-color .1s;text-align:center}
+.user-btn:hover{background:#2563eb;color:#fff;border-color:#2563eb}
+@media(max-width:600px){.stats-grid{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.topbar{padding:0 1rem}.container{padding:1rem .5rem}}
+.import-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius);font-size:12px;font-weight:600}
+.import-pill-new{background:#EAF3DE;color:#27500A}
+.import-pill-update{background:#E6F1FB;color:#0C447C}
+.import-pill-skip{background:#f3f4f6;color:#6b7280}
+.import-pill-warn{background:#fef9c3;color:#a16207}
+.import-row-new td{background:#f0fdf4}
+.import-row-update td{background:#eff6ff}
+.import-row-skip td{color:#9ca3af}
+.import-row-mismatch td{background:#fefce8}
+
+/* ── Client portal mode ── */
+body.client-portal .topbar-right{display:none!important}
+body.client-portal #tab-btn-all{display:none!important}
+body.client-portal #tab-btn-pending{display:none!important}
+body.client-portal #tab-btn-invoiced{display:none!important}
+body.client-portal #tab-btn-payments{display:none!important}
+body.client-portal #tab-btn-unpaid{display:none!important}
+body.client-portal #tab-btn-clients{display:none!important}
+body.client-portal #tab-btn-rates{display:none!important}
+body.client-portal #stats{display:none!important}
+body.client-portal .global-client-filter{display:none!important}
+</style>
+</head>
+<body>
+<script>
+// Apply client-portal class IMMEDIATELY — before any element renders
+(function(){
+  var isPortal=window.location.hash.match(/^#client=/)||new URLSearchParams(window.location.search).get('client');
+  if(isPortal){document.documentElement.classList.add('client-portal-pending')}
+  window._IS_CLIENT_PORTAL=!!isPortal;
+})();
+</script>
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="text-align:center;font-size:40px;margin-bottom:1rem">📦</div>
+    <div class="login-title">Yard Container Tracker</div>
+    <div class="login-sub">Who are you?</div>
+    <div class="user-btns">
+      <button class="user-btn" onclick="selectUser('RACHIT')">👤 RACHIT</button>
+      <button class="user-btn" onclick="selectUser('YARD')">👤 YARD</button>
+      <button class="user-btn" onclick="selectUser('VISHNU')">👤 VISHNU</button>
+      <button class="user-btn" onclick="selectUser('MANISHA')">👤 MANISHA</button>
+    </div>
+  </div>
+</div>
+<!-- Loading -->
+<div id="loading-screen" style="display:none;position:fixed;inset:0;background:var(--bg3);z-index:998;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="font-size:32px">📦</div>
+  <div style="font-size:16px;font-weight:500">Loading data…</div>
+</div>
+<!-- Main App -->
+<div id="app" style="display:none">
+<div class="topbar">
+  <div>
+    <div class="app-title">📦 Yard Container Tracker</div>
+    <div class="today-label" id="today-label"></div>
+  </div>
+  <div class="topbar-right">
+    <span id="sync-status" style="font-size:12px;color:var(--text2);min-width:60px;text-align:right"></span>
+    <select id="global-client-filter" onchange="applyClientFilter()" style="padding:6px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text)">
+      <option value="">All clients</option>
+    </select>
+    <button class="btn" onclick="syncNow()">Sync</button>
+    <button class="btn btn-client" onclick="openClientModal(null)">+ Add Client</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ New Entry</button>
+    <button class="btn btn-bulk" onclick="openBulkModal()">⊞ Bulk Entry</button>
+    <button class="btn" style="background:#7c3aed;color:#fff;border:none" onclick="openImportModal()">↑ Import Excel</button>
+    <button id="undo-import-btn" class="btn" style="display:none;background:#b45309;color:#fff;border:none" onclick="undoLastImport()">↩ Undo Import</button>
+    <span id="active-user-label" style="font-size:12px;font-weight:600;color:var(--text2);padding:0 4px"></span>
+    <button class="btn" onclick="switchUser()" title="Switch user">⇄ Switch</button>
+  </div>
+</div>
+<div class="container">
+  <div class="stats-grid" id="stats"></div>
+  <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+    <div class="tabs">
+      <button id="tab-btn-yard"     class="tab active" onclick="switchTab('yard',this)">In Yard</button>
+      <button id="tab-btn-all"      class="tab"        onclick="switchTab('all',this)">All Transactions</button>
+      <button id="tab-btn-pending"  class="tab"        onclick="switchTab('pending',this)">Pending Invoice</button>
+      <button id="tab-btn-invoiced" class="tab"        onclick="switchTab('invoiced',this)">Invoiced</button>
+      <button id="tab-btn-payments" class="tab"        onclick="switchTab('payments',this)">Pending Payment</button>
+      <button id="tab-btn-unpaid"   class="tab"        onclick="switchTab('unpaid',this)">Unpaid Invoices</button>
+      <button id="tab-btn-clients"  class="tab"        onclick="switchTab('clients',this)">Clients</button>
+      <button id="tab-btn-rates"    class="tab"        onclick="switchTab('rates',this)">Rate Sheet</button>
+    </div>
+    <div style="padding:1.25rem">
+      <div id="tab-yard"></div>
+      <div id="tab-all"      style="display:none"></div>
+      <div id="tab-pending"  style="display:none"></div>
+      <div id="tab-invoiced" style="display:none"></div>
+      <div id="tab-payments" style="display:none"></div>
+      <div id="tab-unpaid"   style="display:none"></div>
+      <div id="tab-clients"  style="display:none"></div>
+      <div id="tab-rates"    style="display:none"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Add Modal -->
+<div id="modal-add" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">New container entry</div>
+    <div class="op-row">
+      <button class="op-btn" id="btn-unload" onclick="setOp('unload')">↓ Unloading</button>
+      <button class="op-btn" id="btn-cross"  onclick="setOp('cross')">⇄ Cross-loading</button>
+    </div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="field"><label>Container no.</label><input id="f-cnum" placeholder="MSCU1234567" style="text-transform:uppercase"></div>
+      <div class="field"><label>Date</label><input id="f-date" type="date"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px"><label>Client</label><select id="f-client"><option value="">— Select client —</option></select></div>
+    <div class="field" style="margin-bottom:10px"><label>Sales Ref</label><input id="f-salesref" placeholder="Sales person"></div>
+    <div class="field"><label>Remarks</label><textarea id="f-remarks" placeholder="Optional notes"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-add')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Entry Modal -->
+<div id="modal-bulk" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Bulk Container Entry</div>
+    <div class="op-row">
+      <button class="op-btn" id="bulk-btn-unload" onclick="setBulkOp('unload')">↓ Unloading</button>
+      <button class="op-btn" id="bulk-btn-cross"  onclick="setBulkOp('cross')">⇄ Cross-loading</button>
+    </div>
+    <div class="field" style="margin-bottom:10px"><label>Client</label><select id="bulk-client"></select></div>
+    <div class="field" style="margin-bottom:10px"><label>Sales Ref</label><input id="bulk-salesref" placeholder="Sales person"></div>
+    <div class="field" style="margin-bottom:10px"><label>Default Gate In Date</label><input id="bulk-date" type="date"></div>
+    <div class="field"><label>Container Numbers (one per line)</label><textarea id="bulk-list" style="height:180px" placeholder="REGU1235760&#10;REGU3228672&#10;TGBU8071201"></textarea></div>
+    <button class="btn" style="margin-top:8px" onclick="generateBulkRows()">Generate Preview</button>
+    <div id="bulk-preview" style="margin-top:10px"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-bulk')">Cancel</button>
+      <button class="btn btn-primary" id="bulk-save-btn" style="display:none" onclick="saveBulkEntries()">Save All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div id="modal-client" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="client-modal-title">Add Client</div>
+    <div class="field"><label>Client Name</label><input id="cl-name" placeholder="Company or person name"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-client')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Modal -->
+<div id="modal-invoice" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Mark as invoiced</div>
+    <div class="field"><label>Invoice number</label><input id="inv-num" placeholder="INV-2024-001"></div>
+    <div class="info-box" id="inv-desc"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-invoice')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInvoice()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Load Modal -->
+<div id="modal-load" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Mark Container Loaded</div>
+    <div class="field"><label>Load Date</label><input id="load-date" type="date"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-load')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLoadedDate()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="modal-edit" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Edit Entry</div>
+    <div class="field" style="margin-bottom:10px"><label>Container No.</label><input id="edit-cnum" type="text"></div>
+    <div class="field" style="margin-bottom:10px"><label>Client</label><select id="edit-client"></select></div>
+    <div class="field" style="margin-bottom:10px"><label>Sales Ref</label><input id="edit-salesref" type="text"></div>
+    <div class="field" style="margin-bottom:10px"><label>Unload Date</label><input id="edit-unload-date" type="date"></div>
+    <div class="field" style="margin-bottom:10px"><label>Load Date</label><input id="edit-load-date" type="date"></div>
+    <div class="field"><label>Remarks</label><textarea id="edit-remarks"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-edit')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditedEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Paid Modal -->
+<div id="modal-paid" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Mark Invoice Paid</div>
+    <div class="field"><label>Payment Date</label><input id="paid-date" type="date"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-paid')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePaidDate()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Load Modal -->
+<div id="modal-bulk-load" class="modal-overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">Mark Containers Loaded</div>
+    <div id="bulk-load-rows" style="max-height:320px;overflow-y:auto;margin-bottom:10px"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-bulk-load')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBulkLoad()">Save all</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div id="modal-import" class="modal-overlay">
+  <div class="modal" style="width:720px;max-width:97vw">
+    <div class="modal-title">Import from Yard Excel</div>
+    <div id="import-step-pick" style="">
+      <div class="info-box" style="margin-bottom:12px">
+        Upload your daily yard Excel (<strong>Sheet6</strong> / first sheet). Rows are matched by container number against existing records. New unloadings are added; existing containers get their gate-out date filled in if missing.
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Choose Excel file (.xlsx)</label>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls" style="padding:6px 0">
+      </div>
+      <div class="modal-btns">
+        <button class="btn" onclick="closeModal('modal-import')">Cancel</button>
+        <button class="btn btn-primary" onclick="parseImportFile()">Parse File →</button>
+      </div>
+    </div>
+    <div id="import-step-preview" style="display:none">
+      <div id="import-summary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"></div>
+      <div id="import-mismatch-section" style="display:none;margin-bottom:12px">
+        <div style="font-weight:600;margin-bottom:6px;color:#a16207">⚠ Container number mismatches — review before importing</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px">These containers from the Excel are already in the system under a similar but different number. Choose the correct match or leave as "Import as new".</div>
+        <div id="import-mismatch-rows" style="max-height:180px;overflow-y:auto"></div>
+      </div>
+      <div style="font-weight:600;margin-bottom:6px">Preview</div>
+      <div id="import-preview-table" style="max-height:320px;overflow-y:auto;font-size:12px"></div>
+      <div class="modal-btns" style="margin-top:12px">
+        <button class="btn" onclick="closeModal('modal-import')">Cancel</button>
+        <button class="btn" onclick="showImportPick()">← Back</button>
+        <button class="btn btn-primary" id="import-commit-btn" onclick="commitImport()">Import All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL='https://xokswepjxmuqukebsrei.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhva3N3ZXBqeG11cXVrZWJzcmVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMzQ0NzUsImV4cCI6MjEwNjcxMDQ3NX0._EX89mgpdluw6rydT_0oE0F9xrsMH0vC90_rC3oVkUQ';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const STORAGE_RATE=3, OP_UNLOAD=15, OP_CROSS=20;
+const AV_BG=['#E1F5EE','#EEEDFE','#E6F1FB','#FAEEDA','#FAECE7','#EAF3DE','#FBEAF0'];
+const AV_TX=['#085041','#3C3489','#0C447C','#633806','#712B13','#27500A','#72243E'];
+
+let DB=[],CLIENTS=[],currentTab='yard',globalClientFilter='';
+let currentOp='unload',bulkOp='unload';
+let editingClientId=null,pendingInvEntry=null,currentLoadId=null,currentEditId=null;
+let selectedInvoices=new Set(),selectedLoad=new Set(),currentPaidIds=[];
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function today(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
+function fmt(d){if(!d)return'–';return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+function fmtXl(d){return d?fmt(d):''}
+function clientById(id){return CLIENTS.find(c=>c.id===id)||null}
+function clientName(id){const c=clientById(id);return c?c.name:'–'}
+function avIdx(id){const i=CLIENTS.filter(c=>!c.deleted).findIndex(c=>c.id===id);return i<0?0:i%AV_BG.length}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
+function filterByCl(data){return globalClientFilter?data.filter(e=>e.clientId===globalClientFilter):data}
+
+function calcStorage(a,b){
+  if(a&&b&&a===b)return{days:0,cost:0};
+  const da=new Date(a+'T00:00:00');
+  const db=b?new Date(b+'T00:00:00'):new Date(today()+'T00:00:00');
+  const days=Math.max(1,Math.ceil((db-da)/864e5));
+  return{days,cost:days*STORAGE_RATE};
+}
+function calcTotal(e){
+  if(e.op==='cross')return{days:0,storageCost:0,opCost:OP_CROSS,total:OP_CROSS};
+  const{days,cost}=calcStorage(e.unloadDate,e.loadDate||null);
+  const opCost=e.loaded?OP_UNLOAD*2:OP_UNLOAD;
+  return{days,storageCost:cost,opCost,total:cost+opCost};
+}
+
+function setSyncStatus(s){
+  const el=document.getElementById('sync-status');if(!el)return;
+  if(s==='saving')el.textContent='Saving…';
+  else if(s==='saved'){el.textContent='Saved ✓';setTimeout(()=>{if(el.textContent==='Saved ✓')el.textContent=''},1500)}
+  else if(s==='error')el.textContent='Error!';
+  else el.textContent='';
+}
+
+function rowToEntry(r){
+  return{id:r.id,containerNo:r.container_no,op:r.op,unloadDate:r.unload_date,loaded:r.loaded,loadDate:r.load_date,clientId:r.client_id,salesRef:r.sales_ref,remarks:r.remarks,invoiceNo:r.invoice_no,invoiced:r.invoiced,paidDate:r.paid_date,deleted:r.deleted,createdAt:r.created_at,createdBy:r.created_by||''};
+}
+function rowToClient(r){return{id:r.id,name:r.name,deleted:r.deleted||false}}
+
+async function loadData(){
+  const[txRes,clRes]=await Promise.all([
+    sb.from('transactions').select('*').eq('deleted',false).order('created_at',{ascending:false}),
+    sb.from('clients').select('*').eq('deleted',false).order('name')
+  ]);
+  if(txRes.error)throw txRes.error;
+  if(clRes.error)throw clRes.error;
+  DB=(txRes.data||[]).map(rowToEntry);
+  CLIENTS=(clRes.data||[]).map(rowToClient);
+}
+
+async function syncNow(){
+  setSyncStatus('saving');
+  try{await loadData();populateClientDropdowns();render();setSyncStatus('saved')}
+  catch(e){setSyncStatus('error');alert('Sync error: '+e.message)}
+}
+
+// ── User session (name only, stored in localStorage) ──────────────────────
+const USERS=['RACHIT','YARD','VISHNU','MANISHA'];
+let activeUser=localStorage.getItem('yardActiveUser2')||null;
+
+function isClientPortal(){return window._IS_CLIENT_PORTAL===true}
+
+function selectUser(name){
+  activeUser=name;
+  localStorage.setItem('yardActiveUser2',name);
+  startApp();
+}
+
+function switchUser(){
+  activeUser=null;
+  localStorage.removeItem('yardActiveUser2');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+async function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('loading-screen').style.display='flex';
+  await loadData();
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  if(isClientPortal()){
+    document.body.classList.add('client-portal');
+    const titleEl=document.querySelector('.app-title');
+    if(titleEl)titleEl.textContent='📦 Container Tracker — Client View';
+  }
+  document.getElementById('today-label').textContent='Today: '+fmt(today());
+  if(!isClientPortal())document.getElementById('active-user-label').textContent='👤 '+activeUser;
+  populateClientDropdowns();
+  applyUrlClientFilter();
+  render();
+  // Auto-refresh every 60 seconds
+  setInterval(async()=>{
+    try{await loadData();populateClientDropdowns();render();setSyncStatus('saved')}catch(e){}
+  },60000);
+}
+
+// Auto-start in client portal mode — skip login screen entirely
+(function(){
+  if(window._IS_CLIENT_PORTAL){
+    activeUser='PORTAL';
+    // Wait for DOM ready
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',startApp);
+    }else{
+      startApp();
+    }
+  }else if(activeUser){
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',startApp);
+    }else{
+      startApp();
+    }
+  }
+})();
+
+function populateClientDropdowns(){
+  const sorted=CLIENTS.filter(c=>!c.deleted).sort((a,b)=>a.name.localeCompare(b.name));
+  const baseOpt='<option value="">— Select client —</option>';
+  ['f-client','bulk-client','edit-client'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const prev=el.value;
+    el.innerHTML=(id==='bulk-client'?'<option value="">— Select client —</option>':baseOpt)+sorted.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    if(prev)el.value=prev;
+  });
+  const gf=document.getElementById('global-client-filter');
+  if(gf){
+    // Global filter shows ALL non-deleted clients
+    const allForFilter=CLIENTS.filter(c=>!c.deleted).sort((a,b)=>a.name.localeCompare(b.name));
+    gf.innerHTML='<option value="">All clients</option>'+allForFilter.map(c=>`<option value="${c.id}"${globalClientFilter===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
+  }
+}
+
+function applyClientFilter(){globalClientFilter=document.getElementById('global-client-filter').value;render()}
+
+function applyUrlClientFilter(){
+  let p=new URLSearchParams(window.location.search).get('client');
+  if(!p){const m=window.location.hash.match(/^#client=(.+)$/);if(m)p=decodeURIComponent(m[1])}
+  if(!p)return;
+  const param=p.trim();
+  let c=CLIENTS.find(x=>!x.deleted&&x.id===param);
+  if(!c)c=CLIENTS.find(x=>!x.deleted&&x.name.trim().toUpperCase()===param.toUpperCase());
+  if(!c){
+    if(isClientPortal()){
+      // Invalid or unrecognised client link — show error, never fall through to all-data view
+      if(!CLIENTS.length){
+        document.body.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px;background:#f8fafc"><div style="font-size:48px">⚠️</div><div style="font-size:20px;font-weight:600;color:#1e293b">Unable to Load</div><div style="font-size:14px;color:#64748b;text-align:center;max-width:320px">Could not connect to the server. Please check your connection and <a href="javascript:location.reload()" style="color:#1D9E75">try again</a>.</div></div>`;
+      }else{
+        document.body.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px;background:#f8fafc"><div style="font-size:48px">🔒</div><div style="font-size:20px;font-weight:600;color:#1e293b">Invalid Link</div><div style="font-size:14px;color:#64748b;text-align:center;max-width:320px">This client portal link is not valid or has expired. Please contact the yard for a new link.</div></div>`;
+      }
+    }
+    return;
+  }
+  globalClientFilter=c.id;
+  // In portal mode: lock the filter — hide dropdown, auto-open client detail
+  if(isClientPortal()){
+    const gf=document.getElementById('global-client-filter');if(gf)gf.style.display='none';
+    // After render, open the client detail panel automatically
+    window._portalClientId=c.id;
+  }else{
+    const el=document.getElementById('global-client-filter');if(el)el.value=c.id;
+  }
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+function setOp(op){
+  currentOp=op;
+  ['unload','cross'].forEach(o=>{document.getElementById('btn-'+o).className='op-btn'+(o===op?' sel-'+o:'')});
+}
+function setBulkOp(op){
+  bulkOp=op;
+  ['unload','cross'].forEach(o=>{document.getElementById('bulk-btn-'+o).className='op-btn'+(o===op?' sel-'+o:'')});
+}
+
+function openAddModal(){
+  document.getElementById('f-cnum').value='';
+  document.getElementById('f-salesref').value='';
+  document.getElementById('f-remarks').value='';
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-client').value=globalClientFilter||'';
+  setOp('unload');
+  document.getElementById('modal-add').classList.add('open');
+}
+document.getElementById('f-cnum').addEventListener('input',function(){this.value=this.value.toUpperCase()});
+
+async function saveEntry(){
+  const cnum=document.getElementById('f-cnum').value.toUpperCase().trim();
+  const date=document.getElementById('f-date').value;
+  const clientId=document.getElementById('f-client').value;
+  const salesRef=document.getElementById('f-salesref').value.trim();
+  const remarks=document.getElementById('f-remarks').value.trim();
+  if(!cnum||!date||!clientId){alert('Container number, date and client are required.');return}
+  if(!/^[A-Z]{4}[0-9]{7}$/.test(cnum)){alert('Container number must be 4 letters + 7 digits.');return}
+  const isCross=currentOp==='cross';
+  if(!isCross){
+    const dup=DB.find(e=>!e.deleted&&e.op==='unload'&&!e.loaded&&e.containerNo===cnum);
+    if(dup){alert('Container '+cnum+' is already in the yard.');return}
+  }
+  setSyncStatus('saving');
+  const{data,error}=await sb.from('transactions').insert({container_no:cnum,op:currentOp,unload_date:date,loaded:isCross,load_date:isCross?date:null,client_id:clientId,sales_ref:salesRef,remarks,invoice_no:null,invoiced:false,paid_date:null,deleted:false,created_by:activeUser||''}).select().single();
+  if(error){setSyncStatus('error');alert('Save error: '+error.message);return}
+  DB.unshift(rowToEntry(data));
+  closeModal('modal-add');setSyncStatus('saved');render();
+}
+
+function openBulkModal(){
+  document.getElementById('bulk-list').value='';
+  document.getElementById('bulk-date').value=today();
+  document.getElementById('bulk-salesref').value='';
+  document.getElementById('bulk-client').innerHTML=document.getElementById('f-client').innerHTML;
+  document.getElementById('bulk-client').value=globalClientFilter||'';
+  document.getElementById('bulk-preview').innerHTML='';
+  document.getElementById('bulk-save-btn').style.display='none';
+  setBulkOp('unload');
+  document.getElementById('modal-bulk').classList.add('open');
+}
+
+function generateBulkRows(){
+  const defaultDate=document.getElementById('bulk-date').value;
+  const lines=document.getElementById('bulk-list').value.split('\n').map(x=>x.trim().toUpperCase()).filter(Boolean);
+  if(!lines.length){alert('Enter at least one container number.');return}
+  let html='<div style="max-height:250px;overflow-y:auto"><table><thead><tr><th>Container</th><th>Date</th></tr></thead><tbody>';
+  lines.forEach((cnum,i)=>{
+    html+=`<tr><td><strong>${esc(cnum)}</strong></td><td><input type="date" id="bulk-row-date-${i}" value="${defaultDate}" style="width:140px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text)"></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('bulk-preview').innerHTML=html;
+  document.getElementById('bulk-save-btn').style.display='';
+}
+
+async function saveBulkEntries(){
+  const clientId=document.getElementById('bulk-client').value;
+  const salesRef=document.getElementById('bulk-salesref').value.trim();
+  if(!clientId){alert('Select a client.');return}
+  const lines=document.getElementById('bulk-list').value.split('\n').map(x=>x.trim().toUpperCase()).filter(Boolean);
+  const isCross=bulkOp==='cross';
+  const skippedExisting=[],skippedRepeated=[],seenInUpload=new Set(),toInsert=[];
+  for(const[i,cnum]of lines.entries()){
+    if(!/^[A-Z]{4}[0-9]{7}$/.test(cnum))continue;
+    if(seenInUpload.has(cnum)){skippedRepeated.push(cnum);continue}
+    seenInUpload.add(cnum);
+    if(!isCross){const dup=DB.find(e=>!e.deleted&&e.op==='unload'&&!e.loaded&&e.containerNo===cnum);if(dup){skippedExisting.push(cnum);continue}}
+    const dateEl=document.getElementById(`bulk-row-date-${i}`);
+    const date=dateEl?dateEl.value:document.getElementById('bulk-date').value;
+    toInsert.push({container_no:cnum,op:bulkOp,unload_date:date,loaded:isCross,load_date:isCross?date:null,client_id:clientId,sales_ref:salesRef,remarks:'',invoice_no:null,invoiced:false,paid_date:null,deleted:false,created_by:activeUser||''});
+  }
+  if(toInsert.length){
+    setSyncStatus('saving');
+    const{data,error}=await sb.from('transactions').insert(toInsert).select();
+    if(error){setSyncStatus('error');alert('Save error: '+error.message);return}
+    (data||[]).forEach(r=>DB.unshift(rowToEntry(r)));
+    setSyncStatus('saved');
+  }
+  closeModal('modal-bulk');render();
+  alert(`Imported: ${toInsert.length}\nSkipped (already in yard): ${skippedExisting.length}${skippedExisting.length?'\n'+skippedExisting.join('\n'):''}\nSkipped (repeated in upload): ${skippedRepeated.length}${skippedRepeated.length?'\n'+skippedRepeated.join('\n'):''}`);
+}
+
+function openClientModal(id){
+  editingClientId=id||null;
+  document.getElementById('client-modal-title').textContent=id?'Edit Client':'Add Client';
+  document.getElementById('cl-name').value=id?(clientById(id)||{}).name||'':'';
+  document.getElementById('modal-client').classList.add('open');
+}
+
+async function saveClient(){
+  const name=document.getElementById('cl-name').value.trim();
+  if(!name){alert('Client name is required.');return}
+  setSyncStatus('saving');
+  if(editingClientId){
+    const{error}=await sb.from('clients').update({name}).eq('id',editingClientId);
+    if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+    const c=clientById(editingClientId);if(c)c.name=name;
+  }else{
+    const{data,error}=await sb.from('clients').insert({name,deleted:false}).select().single();
+    if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+    CLIENTS.push(rowToClient(data));
+  }
+  closeModal('modal-client');setSyncStatus('saved');populateClientDropdowns();render();
+}
+
+async function deleteClient(id){
+  const c=clientById(id);if(!c)return;
+  const hasTx=DB.filter(e=>!e.deleted&&e.clientId===id).length;
+  if(!confirm(`${c.name} has ${hasTx} transaction(s). Permanently delete client?`))return;
+  const{error}=await sb.from('clients').update({deleted:true}).eq('id',id);
+  if(error){alert('Error: '+error.message);return}
+  c.deleted=true;populateClientDropdowns();render();
+}
+
+
+function openInvModal(id){
+  pendingInvEntry=DB.find(e=>e.id===id);if(!pendingInvEntry)return;
+  document.getElementById('inv-num').value=pendingInvEntry.invoiceNo||'';
+  const{total}=calcTotal(pendingInvEntry);
+  document.getElementById('inv-desc').textContent=`Container: ${pendingInvEntry.containerNo} | Client: ${clientName(pendingInvEntry.clientId)} | Total: RO ${total.toFixed(2)}`;
+  document.getElementById('modal-invoice').classList.add('open');
+}
+
+async function saveInvoice(){
+  const n=document.getElementById('inv-num').value.trim();
+  if(!n){alert('Enter invoice number.');return}
+  if(!pendingInvEntry)return;
+  setSyncStatus('saving');
+  const{error}=await sb.from('transactions').update({invoice_no:n,invoiced:true}).eq('id',pendingInvEntry.id);
+  if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+  pendingInvEntry.invoiceNo=n;pendingInvEntry.invoiced=true;
+  closeModal('modal-invoice');pendingInvEntry=null;setSyncStatus('saved');render();
+}
+
+async function unmarkInvoice(id){
+  const e=DB.find(x=>x.id===id);
+  if(e&&confirm('Remove invoice mark from '+e.containerNo+'?')){
+    const{error}=await sb.from('transactions').update({invoiced:false,invoice_no:null,paid_date:null}).eq('id',id);
+    if(error){alert('Error: '+error.message);return}
+    e.invoiced=false;e.invoiceNo=null;e.paidDate='';render();
+  }
+}
+
+function togglePaid(id){
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  if(e.paidDate){
+    if(confirm(`Unmark ${e.containerNo} as paid?`)){
+      sb.from('transactions').update({paid_date:null}).eq('id',id).then(({error})=>{
+        if(error){alert('Error: '+error.message);return}
+        e.paidDate='';render();
+      });
+    }
+    return;
+  }
+  currentPaidIds=[id];
+  document.getElementById('paid-date').value=today();
+  document.getElementById('modal-paid').classList.add('open');
+}
+
+function bulkMarkPaid(){
+  if(!selectedInvoices.size)return;
+  currentPaidIds=[...selectedInvoices];
+  document.getElementById('paid-date').value=today();
+  document.getElementById('modal-paid').classList.add('open');
+}
+
+async function savePaidDate(){
+  const date=document.getElementById('paid-date').value;if(!date)return;
+  setSyncStatus('saving');
+  const{error}=await sb.from('transactions').update({paid_date:date}).in('id',currentPaidIds);
+  if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+  currentPaidIds.forEach(id=>{const e=DB.find(x=>x.id===id);if(e)e.paidDate=date});
+  currentPaidIds=[];selectedInvoices.clear();
+  closeModal('modal-paid');setSyncStatus('saved');render();
+  if(window._afterPaid){window._afterPaid();window._afterPaid=null}
+}
+
+function toggleGroupSelect(invoiceNo,checked){
+  const ids=DB.filter(e=>!e.deleted&&e.invoiced&&String(e.invoiceNo)===String(invoiceNo)).map(e=>e.id);
+  ids.forEach(id=>checked?selectedInvoices.add(id):selectedInvoices.delete(id));
+  document.querySelectorAll('.mark-paid-count-btn').forEach(b=>b.textContent=`Mark Paid (${selectedInvoices.size})`);
+}
+
+function selectInvoiceGroup(invoiceNo){
+  const ids=DB.filter(e=>!e.deleted&&e.invoiced&&String(e.invoiceNo)===String(invoiceNo)).map(e=>e.id);
+  const allSel=ids.length>0&&ids.every(id=>selectedInvoices.has(id));
+  ids.forEach(id=>allSel?selectedInvoices.delete(id):selectedInvoices.add(id));
+  render();
+}
+
+function toggleInvoiceSelection(id,checked){
+  if(checked)selectedInvoices.add(id);else selectedInvoices.delete(id);
+  document.querySelectorAll('.mark-paid-count-btn').forEach(b=>b.textContent=`Mark Paid (${selectedInvoices.size})`);
+}
+
+async function bulkToggleInvoicePaid(invoiceNo){
+  const entries=DB.filter(e=>!e.deleted&&e.invoiced&&String(e.invoiceNo)===String(invoiceNo));
+  const allPaid=entries.every(e=>e.paidDate);
+  if(allPaid){
+    if(confirm(`Unmark invoice ${invoiceNo} as paid?`)){
+      const{error}=await sb.from('transactions').update({paid_date:null}).in('id',entries.map(e=>e.id));
+      if(error){alert('Error: '+error.message);return}
+      entries.forEach(e=>e.paidDate='');render();
+    }
+  }else{
+    currentPaidIds=entries.map(e=>e.id);
+    document.getElementById('paid-date').value=today();
+    document.getElementById('modal-paid').classList.add('open');
+  }
+}
+
+async function deleteEntry(id){
+  const e=DB.find(x=>x.id===id);
+  if(e&&confirm('Delete entry for '+e.containerNo+'?')){
+    const{error}=await sb.from('transactions').update({deleted:true}).eq('id',id);
+    if(error){alert('Error: '+error.message);return}
+    e.deleted=true;render();
+  }
+}
+
+async function markLoaded(id){
+  currentLoadId=id;
+  document.getElementById('load-date').value=today();
+  document.getElementById('modal-load').classList.add('open');
+}
+
+async function saveLoadedDate(){
+  const loadDate=document.getElementById('load-date').value;if(!loadDate)return;
+  const e=DB.find(x=>x.id===currentLoadId);if(!e)return;
+  setSyncStatus('saving');
+  const{error}=await sb.from('transactions').update({loaded:true,load_date:loadDate}).eq('id',currentLoadId);
+  if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+  e.loaded=true;e.loadDate=loadDate;
+  closeModal('modal-load');setSyncStatus('saved');render();
+}
+
+function toggleLoadSelection(id,checked){
+  if(checked)selectedLoad.add(id);else selectedLoad.delete(id);
+  const btn=document.getElementById('bulk-load-btn');
+  if(btn)btn.textContent=`Mark Loaded (${selectedLoad.size})`;
+}
+function toggleSelectAllLoad(checked){
+  const inYard=filterByCl(DB.filter(e=>!e.deleted)).filter(e=>e.op==='unload'&&!e.loaded);
+  selectedLoad=checked?new Set(inYard.map(e=>e.id)):new Set();
+  renderYard();
+}
+
+function openBulkLoadModal(){
+  if(!selectedLoad.size)return;
+  const todayStr=today();
+  const rows=[...selectedLoad].map(id=>{
+    const e=DB.find(x=>x.id===id);if(!e)return'';
+    return`<div class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><label style="flex:1;font-weight:600">${esc(e.containerNo)}</label><input type="date" class="bulk-load-date" data-id="${e.id}" value="${todayStr}"></div>`;
+  }).join('');
+  document.getElementById('bulk-load-rows').innerHTML=rows;
+  document.getElementById('modal-bulk-load').classList.add('open');
+}
+
+async function saveBulkLoad(){
+  const inputs=document.querySelectorAll('.bulk-load-date');
+  const updates=[];
+  inputs.forEach(inp=>{if(inp.value)updates.push({id:inp.dataset.id,load_date:inp.value})});
+  if(!updates.length)return;
+  setSyncStatus('saving');
+  for(const u of updates){
+    await sb.from('transactions').update({loaded:true,load_date:u.load_date}).eq('id',u.id);
+    const e=DB.find(x=>x.id===u.id);if(e){e.loaded=true;e.loadDate=u.load_date}
+  }
+  selectedLoad.clear();
+  closeModal('modal-bulk-load');setSyncStatus('saved');render();
+  alert(`Marked ${updates.length} container(s) as loaded.`);
+}
+
+function openEditModal(id){
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  currentEditId=id;
+  populateClientDropdowns();
+  document.getElementById('edit-cnum').value=e.containerNo||'';
+  document.getElementById('edit-salesref').value=e.salesRef||'';
+  document.getElementById('edit-remarks').value=e.remarks||'';
+  document.getElementById('edit-unload-date').value=e.unloadDate||'';
+  document.getElementById('edit-load-date').value=e.loadDate||'';
+  setTimeout(()=>{const cs=document.getElementById('edit-client');if(cs)cs.value=e.clientId||''},50);
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+async function saveEditedEntry(){
+  const e=DB.find(x=>x.id===currentEditId);if(!e)return;
+  const containerNo=(document.getElementById('edit-cnum').value||'').trim();
+  if(!containerNo){alert('Container number is required.');return}
+  const clientId=document.getElementById('edit-client').value||e.clientId;
+  const salesRef=document.getElementById('edit-salesref').value.trim();
+  const remarks=document.getElementById('edit-remarks').value.trim();
+  const unloadDate=document.getElementById('edit-unload-date').value;
+  const loadDate=document.getElementById('edit-load-date').value;
+  if(unloadDate&&loadDate&&loadDate<unloadDate){alert('Load date cannot be earlier than unload date.');return}
+  setSyncStatus('saving');
+  const upd={container_no:containerNo,client_id:clientId,sales_ref:salesRef,remarks};
+  if(unloadDate)upd.unload_date=unloadDate;
+  if(loadDate){upd.load_date=loadDate;upd.loaded=true}
+  const{error}=await sb.from('transactions').update(upd).eq('id',currentEditId);
+  if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+  e.containerNo=containerNo;e.clientId=clientId;e.salesRef=salesRef;e.remarks=remarks;
+  if(unloadDate)e.unloadDate=unloadDate;
+  if(loadDate){e.loadDate=loadDate;e.loaded=true}
+  closeModal('modal-edit');setSyncStatus('saved');render();
+}
+
+async function bulkInvoiceSelected(){
+  if(!selectedInvoices.size){alert('Select at least one container.');return}
+  const invoiceNo=prompt('Enter invoice number');if(!invoiceNo)return;
+  const toUpdate=[...selectedInvoices].filter(id=>{const e=DB.find(x=>x.id===id);return e&&!e.invoiced});
+  const skipped=selectedInvoices.size-toUpdate.length;
+  if(toUpdate.length){
+    setSyncStatus('saving');
+    const{error}=await sb.from('transactions').update({invoice_no:invoiceNo,invoiced:true}).in('id',toUpdate);
+    if(error){setSyncStatus('error');alert('Error: '+error.message);return}
+    toUpdate.forEach(id=>{const e=DB.find(x=>x.id===id);if(e){e.invoiceNo=invoiceNo;e.invoiced=true}});
+    setSyncStatus('saved');
+  }
+  selectedInvoices.clear();render();
+  alert(`Invoice Assigned\nUpdated: ${toUpdate.length}\nSkipped (already invoiced): ${skipped}`);
+}
+
+function markInvoicePaidFromDetail(invoiceNo,cid){
+  const entries=DB.filter(e=>!e.deleted&&e.invoiced&&String(e.invoiceNo)===String(invoiceNo));
+  currentPaidIds=entries.map(e=>e.id);
+  document.getElementById('paid-date').value=today();
+  document.getElementById('modal-paid').classList.add('open');
+  window._afterPaid=()=>renderClientDetail(cid,'ppay');
+}
+
+function copyClientLink(clientId){
+  const c=clientById(clientId);
+  const url='https://YOUR-HOST/YOUR-PATH/yard_tracker_new.html?client='+encodeURIComponent(clientId);
+  navigator.clipboard.writeText(url).catch(()=>{const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)});
+  alert('Client portal link copied!\n\n'+url+'\n\nSend this to '+(c?c.name:clientId));
+}
+
+// ─── Daily Excel Import ───────────────────────────────────────────────────────
+let importParsedRows=[];    // final rows ready to commit
+let importMismatchMap={};  // containerNo -> chosen resolution ('new' or existing containerNo)
+let importRawRows=[];      // kept so we can re-process after adding a client
+let lastImportUndo=null;   // {insertedIds:[...], updatedIds:[{id,prevLoaded,prevLoadDate}]}
+
+function openImportModal(){
+  showImportPick();
+  document.getElementById('import-file-input').value='';
+  document.getElementById('modal-import').classList.add('open');
+}
+
+function showImportPick(){
+  document.getElementById('import-step-pick').style.display='';
+  document.getElementById('import-step-preview').style.display='none';
+}
+
+// Normalize container number: uppercase, strip spaces & dashes
+function normCnum(s){return String(s||'').toUpperCase().replace(/[\s\-]/g,'').trim()}
+
+// Parse Excel date: can be a serial number, a DD.MM.YYYY string, or a Date object
+function parseExcelDate(v){
+  if(!v)return null;
+  if(v instanceof Date){
+    if(isNaN(v.getTime()))return null;
+    return v.toISOString().slice(0,10);
+  }
+  const s=String(v).trim();
+  // DD.MM.YYYY or DD/MM/YYYY
+  const m=s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  if(m)return`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  // YYYY-MM-DD already
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // Excel serial number
+  if(!isNaN(Number(v))){
+    const n=Number(v);
+    if(n>40000&&n<60000){
+      const d=new Date(Math.round((n-25569)*86400*1000));
+      return d.toISOString().slice(0,10);
+    }
+  }
+  return null;
+}
+
+// Map TYPE OF WORK column → op ('unload' | 'cross') + loaded flag
+// Handles both old format (OFFLOADING/LOADING) and new format (UNLOADING/LOADING)
+function mapOpType(typeOfWork){
+  const t=String(typeOfWork||'').toUpperCase().trim();
+  if(t.includes('CROSS LOAD')||t.includes('CROSS STUFF'))return{op:'cross',loaded:true};
+  // Gate-in: OFFLOADING, UNLOADING, EMPTY UNLOADING, STORAGE, EMPTY CONTAINER OFFLOAD
+  if(t.includes('UNLOAD')||t.includes('OFFLOAD')||t.includes('STORAGE'))return{op:'unload',loaded:false};
+  // Gate-out: LOADING (but not cross/offload/unload)
+  if(t.includes('LOAD')&&!t.includes('UNLOAD')&&!t.includes('OFFLOAD')&&!t.includes('CROSS'))return{op:'unload',loaded:true};
+  return null; // unknown — skip row
+}
+
+async function parseImportFile(){
+  const file=document.getElementById('import-file-input').files[0];
+  if(!file){alert('Please select an Excel file first.');return}
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=new Uint8Array(ev.target.result);
+      const wb=XLSX.read(data,{type:'array',cellDates:true});
+      // Use first sheet
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      importRawRows=rawRows;
+      processImportRows(rawRows);
+    }catch(err){alert('Error reading Excel: '+err.message)}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processImportRows(rawRows){
+  // Skip header row if first row contains label text instead of data
+  let dataRows=rawRows;
+  if(rawRows.length){
+    const r0=rawRows[0];
+    const c0=String(r0[0]||'').toUpperCase().trim();
+    const c1=String(r0[1]||'').toUpperCase().trim();
+    const c2=String(r0[2]||'').toUpperCase().trim();
+    // Old format header: SL NO in col0, DATE in col1
+    // New format header: DATE in col0, CONTAINER in col1, OPERATION/TYPE in col2
+    const isHeader=c0.includes('SL')||c0==='DATE'||c1==='DATE'||c1==='CONTAINER'||c2.includes('OPERATION')||c2.includes('TYPE');
+    if(isHeader)dataRows=rawRows.slice(1);
+  }
+
+  // Parse ALL rows in order, preserving multiple moves of the same container.
+  // A container offloaded → loaded → offloaded again in the same Excel must create
+  // two separate DB records. We process rows in sequence and pair each gate-in with
+  // the next gate-out for that container (if any), then start fresh for the next gate-in.
+
+  // Auto-detect column layout by inspecting first data row:
+  // OLD format: [SL, Date, Container, TypeOfWork, Client, SalesRef, ...]  → indices 1,2,3,4,5
+  // NEW format: [Date, Container, Operation, Client, Operator, JobNo, ...]→ indices 0,1,2,3,5
+  let colDate=1,colCnum=2,colOp=3,colClient=4,colRef=5;
+  if(dataRows.length){
+    const fr=dataRows[0];
+    const c0=String(fr[0]||'').trim();
+    const c1=String(fr[1]||'').trim();
+    const looksDate=/^\d{1,2}[.\-\/]\d{1,2}[.\-\/]\d{2,4}$/.test(c0)||(!isNaN(Number(c0))&&Number(c0)>40000&&Number(c0)<100000);
+    const looksContainer=/^[A-Z]{4}\d{7}$/.test(c1.replace(/\s/g,'').toUpperCase());
+    if(looksDate||looksContainer){colDate=0;colCnum=1;colOp=2;colClient=3;colRef=5;}
+  }
+
+  // Build an ordered list of move events from the Excel rows
+  const moveEvents=[]; // {type:'in'|'out'|'cross', cnum, rawCnum, date, clientName, salesRef}
+  for(const row of dataRows){
+    if(!row||row.every(v=>v===null||v===''))continue;
+    const rawCnum=String(row[colCnum]||'').trim();
+    if(!rawCnum||rawCnum.toUpperCase()==='CONTAINER'||rawCnum.toUpperCase()==='DRUM')continue;
+    const cnum=normCnum(rawCnum);
+    if(!cnum)continue;
+    const date=parseExcelDate(row[colDate]);
+    const typeOfWork=String(row[colOp]||'');
+    const clientNameVal=String(row[colClient]||'').trim();
+    const salesRef=String(row[colRef]||'').trim();
+    const mapped=mapOpType(typeOfWork);
+    if(!mapped)continue;
+    if(mapped.op==='cross'){
+      moveEvents.push({type:'cross',cnum,rawCnum,date,clientName:clientNameVal,salesRef});
+    }else if(!mapped.loaded){
+      moveEvents.push({type:'in',cnum,rawCnum,date,clientName:clientNameVal,salesRef});
+    }else{
+      moveEvents.push({type:'out',cnum,rawCnum,date,clientName:clientNameVal,salesRef});
+    }
+  }
+
+  // Pair gate-ins with gate-outs in order per container number.
+  // Multiple in→out→in cycles produce multiple trip records.
+  const trips=[]; // [{cnum, rawCnum, inDate, outDate|null, clientName, salesRef}]
+  const crossList=[]; // [{cnum, rawCnum, date, clientName, salesRef}]
+  const pendingIn={}; // cnum → {date, rawCnum, clientName, salesRef} — waiting for gate-out
+  for(const ev of moveEvents){
+    if(ev.type==='cross'){
+      crossList.push(ev);
+    }else if(ev.type==='in'){
+      // If already have an open gate-in for this container, close it without gate-out first
+      if(pendingIn[ev.cnum]){
+        trips.push({cnum:ev.cnum,rawCnum:pendingIn[ev.cnum].rawCnum,inDate:pendingIn[ev.cnum].date,outDate:null,clientName:pendingIn[ev.cnum].clientName,salesRef:pendingIn[ev.cnum].salesRef});
+      }
+      pendingIn[ev.cnum]={date:ev.date,rawCnum:ev.rawCnum,clientName:ev.clientName,salesRef:ev.salesRef};
+    }else if(ev.type==='out'){
+      if(pendingIn[ev.cnum]){
+        // Pair with open gate-in
+        trips.push({cnum:ev.cnum,rawCnum:pendingIn[ev.cnum].rawCnum,inDate:pendingIn[ev.cnum].date,outDate:ev.date,clientName:pendingIn[ev.cnum].clientName,salesRef:pendingIn[ev.cnum].salesRef});
+        delete pendingIn[ev.cnum];
+      }else{
+        // Gate-out with no gate-in in this Excel → standalone gate-out (update DB)
+        trips.push({cnum:ev.cnum,rawCnum:ev.rawCnum,inDate:null,outDate:ev.date,clientName:ev.clientName,salesRef:ev.salesRef});
+      }
+    }
+  }
+  // Any remaining open gate-ins with no gate-out
+  for(const[cnum,info]of Object.entries(pendingIn)){
+    trips.push({cnum,rawCnum:info.rawCnum,inDate:info.date,outDate:null,clientName:info.clientName,salesRef:info.salesRef});
+  }
+
+  // Now decide action per trip:
+  const actions=[]; // [{action:'new'|'update'|'skip'|'mismatch', ...}]
+  // existingActive: containers currently in yard (unloaded, not yet loaded)
+  // We clone this and update it as we process, so a container offloaded in this
+  // Excel and then loaded again is correctly handled for the 2nd offloading.
+  const existingActive=DB.filter(e=>!e.deleted&&e.op==='unload'&&!e.loaded).map(e=>({...e}));
+  const newlyInserted=[]; // track containers we insert during this processing pass
+
+  function findClientId(nameFromExcel){
+    if(!nameFromExcel)return null;
+    const n=nameFromExcel.trim().toUpperCase();
+    const exact=CLIENTS.find(c=>c.name.trim().toUpperCase()===n);
+    if(exact)return exact.id;
+    const partial=CLIENTS.find(c=>c.name.trim().toUpperCase().includes(n)||n.includes(c.name.trim().toUpperCase()));
+    return partial?partial.id:null;
+  }
+
+  function findExistingByNorm(cnum){
+    return existingActive.find(e=>normCnum(e.containerNo)===cnum)||null;
+  }
+
+  function editDist(a,b){const m=a.length,n=b.length;const d=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=a[i-1]===b[j-1]?d[i-1][j-1]:1+Math.min(d[i-1][j],d[i][j-1],d[i-1][j-1]);return d[m][n];}
+
+  for(const trip of trips){
+    const{cnum,rawCnum,inDate,outDate,clientName:cName,salesRef}=trip;
+    const clientId=findClientId(cName);
+
+    if(inDate){
+      // This trip has a gate-in
+      const existing=findExistingByNorm(cnum);
+      if(existing){
+        // Already in yard — skip the gate-in, but apply gate-out if present
+        if(outDate){
+          actions.push({action:'update',existingId:existing.id,loadDate:outDate,cnum:existing.containerNo,clientName:cName});
+          // Remove from existingActive so a subsequent gate-in for same container is treated as new
+          const idx=existingActive.findIndex(e=>e.id===existing.id);
+          if(idx>=0)existingActive.splice(idx,1);
+        }else{
+          actions.push({action:'skip',reason:'already in yard',cnum:rawCnum,clientName:cName});
+        }
+      }else{
+        // New gate-in — check for typo mismatch
+        const prefix=cnum.slice(0,4);
+        const digits=cnum.slice(4);
+        const near=existingActive.find(e=>{const nc=normCnum(e.containerNo);return nc.slice(0,4)===prefix&&nc!==cnum&&editDist(nc.slice(4),digits)<=2;});
+        if(near){
+          actions.push({action:'mismatch',xlCnum:rawCnum,normXl:cnum,dbCnum:near.containerNo,date:inDate,clientId,clientName:cName,salesRef,loadDate:outDate,loaded:!!outDate});
+        }else{
+          actions.push({action:'new',cnum,rawCnum,date:inDate,clientId,clientName:cName,salesRef,loadDate:outDate,loaded:!!outDate,op:'unload'});
+          if(!outDate){
+            // Insert into existingActive so a subsequent gate-out for same container can match it
+            newlyInserted.push({id:'__pending_'+cnum+'_'+inDate,containerNo:cnum,loaded:false,loadDate:null});
+            existingActive.push({id:'__pending_'+cnum+'_'+inDate,containerNo:cnum,loaded:false,loadDate:null});
+          }
+        }
+      }
+    }else if(outDate){
+      // Standalone gate-out (no gate-in in this Excel)
+      const existing=findExistingByNorm(cnum);
+      if(existing){
+        actions.push({action:'update',existingId:existing.id,loadDate:outDate,cnum:existing.containerNo,clientName:clientName(existing.clientId)});
+        const idx=existingActive.findIndex(e=>e.id===existing.id);
+        if(idx>=0)existingActive.splice(idx,1);
+      }else{
+        actions.push({action:'skip',reason:'gate-out but not in yard',cnum:rawCnum,clientName:'–'});
+      }
+    }
+  }
+
+  // Process cross rows
+  for(const cr of crossList){
+    const clientId=findClientId(cr.clientName);
+    // Check if this exact cross-load already in DB (same container + date)
+    const dupCross=DB.find(e=>!e.deleted&&e.op==='cross'&&normCnum(e.containerNo)===cr.cnum&&e.unloadDate===cr.date);
+    if(dupCross){
+      actions.push({action:'skip',reason:'cross-load already exists',cnum:cr.rawCnum,clientName:cr.clientName});
+    }else{
+      actions.push({action:'new',op:'cross',cnum:cr.cnum,rawCnum:cr.rawCnum,date:cr.date,clientId,clientName:cr.clientName,salesRef:cr.salesRef,loaded:true,loadDate:cr.date});
+    }
+  }
+
+  // Store result and show preview
+  importParsedRows=actions;
+  // preserve existing mismatch choices, only init new ones
+  actions.filter(a=>a.action==='mismatch'&&!(a.normXl in importMismatchMap)).forEach(a=>importMismatchMap[a.normXl]='new');
+  renderImportPreview(actions);
+}
+
+function renderImportPreview(actions){
+  const newRows=actions.filter(a=>a.action==='new');
+  const updateRows=actions.filter(a=>a.action==='update');
+  const skipRows=actions.filter(a=>a.action==='skip');
+  const mismatchRows=actions.filter(a=>a.action==='mismatch');
+
+  // Summary pills
+  const totalImporting=newRows.length+updateRows.length+mismatchRows.length;
+  document.getElementById('import-summary').innerHTML=
+    `<span class="import-pill" style="background:var(--bg3);color:var(--text);font-weight:700">Total: ${totalImporting}</span>`+
+    `<span class="import-pill import-pill-new">✚ ${newRows.length} new</span>`+
+    `<span class="import-pill import-pill-update">↑ ${updateRows.length} updates</span>`+
+    `<span class="import-pill import-pill-skip">— ${skipRows.length} skipped</span>`+
+    (mismatchRows.length?`<span class="import-pill import-pill-warn">⚠ ${mismatchRows.length} mismatch(es)</span>`:'');
+
+  // Mismatch section
+  const mmsec=document.getElementById('import-mismatch-section');
+  if(mismatchRows.length){
+    mmsec.style.display='';
+    let html='<table style="width:100%;font-size:12px"><thead><tr><th>Excel container</th><th>Similar in DB</th><th>Resolution</th></tr></thead><tbody>';
+    mismatchRows.forEach(a=>{
+      html+=`<tr class="import-row-mismatch">
+        <td><strong>${esc(a.xlCnum)}</strong></td>
+        <td>${esc(a.dbCnum)}</td>
+        <td><select onchange="importMismatchMap['${esc(a.normXl)}']=this.value" style="font-size:12px;padding:3px;border:0.5px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text)">
+          <option value="new">Import as new container</option>
+          <option value="usedb">Use DB number (${esc(a.dbCnum)})</option>
+        </select></td>
+      </tr>`;
+    });
+    html+='</tbody></table>';
+    document.getElementById('import-mismatch-rows').innerHTML=html;
+  }else{
+    mmsec.style.display='none';
+  }
+
+  // Preview table
+  let html='<table><thead><tr><th>Action</th><th>Container</th><th>Type</th><th>Date</th><th>Client</th><th>Note</th></tr></thead><tbody>';
+  actions.forEach(a=>{
+    let actionLabel='',rowClass='',typeLabel='',note='';
+    if(a.action==='new'){
+      actionLabel='<span class="badge badge-in">New</span>';
+      rowClass='import-row-new';
+      typeLabel=a.op==='cross'?'Cross-load':'Unloading'+(a.loaded?' + Load':'');
+      note=a.clientId?'':`<span style="color:#b45309;margin-right:6px">Client not found: ${esc(a.clientName)}</span><button class="btn btn-sm btn-client" data-cname="${esc(a.clientName)}" onclick="importAddClient(this.dataset.cname)">+ Add Client</button>`;
+    }else if(a.action==='update'){
+      actionLabel='<span class="badge badge-inv">Update</span>';
+      rowClass='import-row-update';
+      typeLabel='Gate out';
+      note='Load date: '+fmt(a.loadDate);
+    }else if(a.action==='skip'){
+      actionLabel='<span style="color:#9ca3af;font-size:12px">Skip</span>';
+      rowClass='import-row-skip';
+      typeLabel='–';
+      note=esc(a.reason||'');
+    }else if(a.action==='mismatch'){
+      actionLabel='<span class="badge badge-cross">Review</span>';
+      rowClass='import-row-mismatch';
+      typeLabel='Unloading';
+      note=`Similar to: ${esc(a.dbCnum)}`+(a.clientId?'':` &nbsp;<button class="btn btn-sm btn-client" data-cname="${esc(a.clientName)}" onclick="importAddClient(this.dataset.cname)">+ Add Client</button>`);
+    }
+    html+=`<tr class="${rowClass}"><td>${actionLabel}</td><td>${esc(a.rawCnum||a.cnum)}</td><td>${typeLabel}</td><td>${fmt(a.date||a.loadDate)}</td><td>${esc(a.clientName||'–')}</td><td style="color:var(--text2)">${note}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('import-preview-table').innerHTML=html;
+
+  // Update commit button label
+  const total=newRows.length+updateRows.length+mismatchRows.length;
+  document.getElementById('import-commit-btn').textContent=`Import (${total} changes)`;
+
+  document.getElementById('import-step-pick').style.display='none';
+  document.getElementById('import-step-preview').style.display='';
+}
+
+async function importAddClient(name){
+  if(!name||!name.trim())return;
+  const trimmed=name.trim();
+  // Check not already added in this session
+  const already=CLIENTS.find(c=>c.name.trim().toUpperCase()===trimmed.toUpperCase());
+  if(already){
+    // already exists (maybe just added) — just re-process
+    processImportRows(importRawRows);
+    return;
+  }
+  setSyncStatus('saving');
+  const{data,error}=await sb.from('clients').insert({name:trimmed,deleted:false}).select().single();
+  if(error){setSyncStatus('error');alert('Could not add client: '+error.message);return}
+  CLIENTS.push(rowToClient(data));
+  populateClientDropdowns();
+  setSyncStatus('saved');
+  // Re-process the import so this client is now matched
+  processImportRows(importRawRows);
+}
+
+async function commitImport(){
+  const actions=importParsedRows;
+  if(!actions.length){closeModal('modal-import');return}
+  setSyncStatus('saving');
+  let inserted=0,updated=0,errors=0;
+  const undoInsertedIds=[];
+  const undoUpdatedIds=[];
+
+  for(const a of actions){
+    if(a.action==='skip')continue;
+
+    if(a.action==='new'){
+      const isCross=a.op==='cross';
+      const cnum=normCnum(a.cnum);
+      const clientId=a.clientId||null;
+      const row={container_no:cnum,op:isCross?'cross':'unload',unload_date:a.date,loaded:a.loaded||false,load_date:a.loaded?a.loadDate||a.date:null,client_id:clientId,sales_ref:a.salesRef||null,remarks:'',invoice_no:null,invoiced:false,paid_date:null,deleted:false,created_by:activeUser||''};
+      const{data,error}=await sb.from('transactions').insert(row).select().single();
+      if(error){errors++;continue}
+      DB.unshift(rowToEntry(data));undoInsertedIds.push(data.id);inserted++;
+    }
+
+    else if(a.action==='update'){
+      const existing=DB.find(x=>x.id===a.existingId);
+      const prevLoaded=existing?existing.loaded:false;
+      const prevLoadDate=existing?existing.loadDate:null;
+      const{error}=await sb.from('transactions').update({loaded:true,load_date:a.loadDate}).eq('id',a.existingId);
+      if(error){errors++;continue}
+      if(existing){existing.loaded=true;existing.loadDate=a.loadDate}
+      undoUpdatedIds.push({id:a.existingId,prevLoaded,prevLoadDate});
+      updated++;
+    }
+
+    else if(a.action==='mismatch'){
+      const resolution=importMismatchMap[a.normXl]||'new';
+      if(resolution==='usedb'){
+        // treat as gate-out update for existing DB record
+        const existing=DB.find(e=>!e.deleted&&e.op==='unload'&&!e.loaded&&normCnum(e.containerNo)===normCnum(a.dbCnum));
+        if(existing){
+          const prevLoaded=existing.loaded;const prevLoadDate=existing.loadDate;
+          const{error}=await sb.from('transactions').update({loaded:a.loaded,load_date:a.loaded?a.loadDate||a.date:null}).eq('id',existing.id);
+          if(error){errors++;continue}
+          existing.loaded=a.loaded;existing.loadDate=a.loaded?a.loadDate||a.date:null;
+          undoUpdatedIds.push({id:existing.id,prevLoaded,prevLoadDate});
+          updated++;
+        }
+      }else{
+        // insert as brand new container
+        const clientId=a.clientId||null;
+        const row={container_no:normCnum(a.xlCnum),op:'unload',unload_date:a.date,loaded:a.loaded||false,load_date:a.loaded?a.loadDate||a.date:null,client_id:clientId,sales_ref:a.salesRef||null,remarks:'',invoice_no:null,invoiced:false,paid_date:null,deleted:false,created_by:activeUser||''};
+        const{data,error}=await sb.from('transactions').insert(row).select().single();
+        if(error){errors++;continue}
+        DB.unshift(rowToEntry(data));undoInsertedIds.push(data.id);inserted++;
+      }
+    }
+  }
+
+  // Save undo state so the toolbar button appears
+  lastImportUndo=(undoInsertedIds.length||undoUpdatedIds.length)?{insertedIds:undoInsertedIds,updatedIds:undoUpdatedIds}:null;
+  updateUndoImportBtn();
+
+  importParsedRows=[];importMismatchMap={};
+  closeModal('modal-import');setSyncStatus('saved');render();
+  alert(`Import complete!\nTotal: ${inserted+updated}\n✚ Inserted: ${inserted}\n↑ Updated: ${updated}${errors?`\n⚠ Errors: ${errors}`:''}`);
+}
+function updateUndoImportBtn(){
+  const btn=document.getElementById('undo-import-btn');
+  if(!btn)return;
+  if(lastImportUndo){
+    const n=lastImportUndo.insertedIds.length+lastImportUndo.updatedIds.length;
+    btn.style.display='';
+    btn.textContent=`↩ Undo Import (${n})`;
+  }else{
+    btn.style.display='none';
+  }
+}
+
+async function undoLastImport(){
+  if(!lastImportUndo){alert('Nothing to undo.');return}
+  const{insertedIds,updatedIds}=lastImportUndo;
+  const total=insertedIds.length+updatedIds.length;
+  if(!confirm(`Undo last import?\nThis will delete ${insertedIds.length} inserted record(s) and revert ${updatedIds.length} gate-out update(s).`))return;
+  setSyncStatus('saving');
+  let errors=0;
+  for(const id of insertedIds){
+    const{error}=await sb.from('transactions').update({deleted:true}).eq('id',id);
+    if(error){errors++;continue}
+    const e=DB.find(x=>x.id===id);if(e)e.deleted=true;
+  }
+  for(const{id,prevLoaded,prevLoadDate}of updatedIds){
+    const{error}=await sb.from('transactions').update({loaded:prevLoaded,load_date:prevLoadDate}).eq('id',id);
+    if(error){errors++;continue}
+    const e=DB.find(x=>x.id===id);if(e){e.loaded=prevLoaded;e.loadDate=prevLoadDate;}
+  }
+  lastImportUndo=null;
+  updateUndoImportBtn();
+  setSyncStatus('saved');render();
+  alert(`Undo complete. ${total-errors} change(s) reversed.${errors?`\n⚠ ${errors} error(s).`:''}`);
+}
+// ─── End Daily Excel Import ───────────────────────────────────────────────────
+
+// Excel exports
+function ensureXLSX(){
+  return new Promise((resolve,reject)=>{
+    if(window.XLSX){resolve();return}
+    const s=document.createElement('script');
+    s.src='https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
+    s.onload=resolve;s.onerror=()=>reject(new Error('Failed to load Excel library.'));
+    document.head.appendChild(s);
+  });
+}
+
+async function exportBillingSheet(cid){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const cidToUse=cid||globalClientFilter;
+  let data=DB.filter(e=>!e.deleted&&!e.invoiced&&(e.loaded||e.op==='cross'));
+  if(cidToUse)data=data.filter(e=>e.clientId===cidToUse);
+  if(!data.length){alert('No ready-to-invoice containers.');return}
+  const label=cidToUse?clientName(cidToUse):'All Clients';
+  let tS=0,tOp=0,tTotal=0;
+  const rows=data.map(e=>{const r=calcTotal(e);tS+=r.storageCost;tOp+=r.opCost;tTotal+=r.total;return{'Container No':e.containerNo,'Client':clientName(e.clientId),'Gate In':fmtXl(e.unloadDate),'Gate Out':fmtXl(e.loadDate),'Days':r.days,'Storage (RO)':+r.storageCost.toFixed(3),'Op Charge (RO)':+r.opCost.toFixed(3),'Total (RO)':+r.total.toFixed(3),'Remarks':e.op==='cross'?'Cross Load':(e.remarks||'')}});
+  rows.push({});rows.push({'Container No':'TOTAL','Storage (RO)':+tS.toFixed(3),'Op Charge (RO)':+tOp.toFixed(3),'Total (RO)':+tTotal.toFixed(3)});
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:18},{wch:25},{wch:14},{wch:14},{wch:8},{wch:16},{wch:16},{wch:14},{wch:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Billing');
+  XLSX.writeFile(wb,`${label}_Billing_${today()}.xlsx`);
+}
+
+async function exportPendingInvoiceSummary(){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const summary={};
+  DB.forEach(e=>{
+    if(e.deleted||e.invoiced)return;
+    const isUL=e.op==='unload'&&e.loaded,isCross=e.op==='cross';
+    if(!isUL&&!isCross)return;
+    const cl=clientName(e.clientId)||'Unknown';
+    if(!summary[cl])summary[cl]={unloadLoad:0,cross:0};
+    if(isUL)summary[cl].unloadLoad++;if(isCross)summary[cl].cross++;
+  });
+  const rows=Object.keys(summary).sort().map(cl=>({'Client':cl,'Unload+Load Pending':summary[cl].unloadLoad,'Cross-Load Pending':summary[cl].cross,'Total':summary[cl].unloadLoad+summary[cl].cross}));
+  if(!rows.length){alert('No pending invoices.');return}
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:35},{wch:20},{wch:20},{wch:10}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Pending Summary');
+  XLSX.writeFile(wb,`Pending_Invoice_Summary_${today()}.xlsx`);
+}
+
+async function exportClientInYardExcel(cid){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const c=clientById(cid);const label=c?c.name:'All';
+  const portal=isClientPortal();
+  let data=DB.filter(e=>!e.deleted&&e.op==='unload'&&!e.loaded);
+  if(cid)data=data.filter(e=>e.clientId===cid);
+  if(!data.length){alert('No containers in yard.');return}
+  let tS=0,tT=0;
+  const rows=data.map(e=>{
+    const r=calcTotal(e);tS+=r.storageCost;tT+=r.total;
+    if(portal){
+      return{'Container No':e.containerNo,'Gate In':fmtXl(e.unloadDate),'Days in Yard':r.days,'Remarks':e.remarks||''};
+    }
+    return{'Container No':e.containerNo,'Client':clientName(e.clientId),'Gate In':fmtXl(e.unloadDate),'Days in Yard':r.days,'Storage Accrued (RO)':+r.storageCost.toFixed(2),'Op Charge (RO)':+r.opCost.toFixed(2),'Total Accrued (RO)':+r.total.toFixed(2),'Sales Ref':e.salesRef||'','Remarks':e.remarks||''};
+  });
+  if(!portal){
+    rows.push({});
+    rows.push({'Container No':'TOTAL','Storage Accrued (RO)':+tS.toFixed(2),'Total Accrued (RO)':+tT.toFixed(2)});
+  }
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=portal?[{wch:18},{wch:14},{wch:12},{wch:25}]:[{wch:18},{wch:25},{wch:14},{wch:12},{wch:20},{wch:16},{wch:20},{wch:14},{wch:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'In Yard');
+  XLSX.writeFile(wb,`${label}_InYard_${today()}.xlsx`);
+}
+
+async function exportClientCompletedExcel(cid){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const c=clientById(cid);const label=c?c.name:'Client';
+  const data=DB.filter(e=>!e.deleted&&e.clientId===cid&&((e.op==='unload'&&e.loaded)||e.op==='cross'));
+  if(!data.length){alert('No completed containers.');return}
+  // Group by container number to club multiple moves
+  const groups={};
+  data.forEach(e=>{const k=e.containerNo;if(!groups[k])groups[k]=[];groups[k].push(e)});
+  const containerKeys=Object.keys(groups).sort((a,b)=>{
+    const aD=groups[a][0].unloadDate||groups[a][0].loadDate||'';
+    const bD=groups[b][0].unloadDate||groups[b][0].loadDate||'';
+    return bD.localeCompare(aD);
+  });
+  const rows=[];
+  containerKeys.forEach(cnum=>{
+    const moves=groups[cnum].sort((a,b)=>(a.unloadDate||a.loadDate||'').localeCompare(b.unloadDate||b.loadDate||''));
+    const multiMove=moves.length>1;
+    moves.forEach((e,idx)=>{
+      const isCross=e.op==='cross';
+      const moveLabel=multiMove?`Move ${idx+1}`:'';
+      const opLabel=isCross?'Cross-load':'';
+      const remarksArr=[moveLabel,opLabel,e.remarks||''].filter(Boolean);
+      rows.push({
+        'Container No':multiMove&&idx>0?'':cnum,
+        'Gate In':fmtXl(e.unloadDate),
+        'Gate Out':fmtXl(e.loadDate),
+        'Days':calcTotal(e).days,
+        'Remarks':remarksArr.join(' | ')
+      });
+    });
+    if(multiMove)rows.push({});
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:18},{wch:14},{wch:14},{wch:8},{wch:30}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Completed');
+  XLSX.writeFile(wb,`${label}_Completed_${today()}.xlsx`);
+}
+function exportClientBillingExcel(cid){exportBillingSheet(cid)}
+
+async function exportPendingPaymentExcel(){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  let data=filterByCl(DB.filter(e=>!e.deleted&&e.invoiced&&e.invoiceNo&&!e.paidDate));
+  const groups={};data.forEach(e=>{(groups[e.invoiceNo]=groups[e.invoiceNo]||[]).push(e)});
+  const rows=Object.entries(groups).map(([inv,entries])=>{const total=entries.reduce((s,e)=>s+calcTotal(e).total,0);return{'Invoice No':inv,'Client':clientName(entries[0].clientId),'Containers':entries.length,'Container Nos':entries.map(e=>e.containerNo).join(', '),'Amount (RO)':+total.toFixed(2),'Status':'Unpaid'}}).sort((a,b)=>String(b['Invoice No']).localeCompare(String(a['Invoice No'])));
+  if(!rows.length){alert('No unpaid invoices.');return}
+  const grand=rows.reduce((s,r)=>s+r['Amount (RO)'],0);
+  rows.push({});rows.push({'Invoice No':'TOTAL','Amount (RO)':+grand.toFixed(2)});
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:16},{wch:28},{wch:12},{wch:50},{wch:14},{wch:10}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Pending Payments');
+  XLSX.writeFile(wb,`Pending_Payment_Summary_${today()}.xlsx`);
+}
+
+async function exportClientPendingPaymentExcel(cid){
+  try{await ensureXLSX()}catch(e){alert(e.message);return}
+  const c=clientById(cid);
+  const data=DB.filter(e=>!e.deleted&&e.invoiced&&e.invoiceNo&&e.clientId===cid&&!e.paidDate);
+  const groups={};data.forEach(e=>{(groups[e.invoiceNo]=groups[e.invoiceNo]||[]).push(e)});
+  const rows=Object.entries(groups).map(([inv,entries])=>{const total=entries.reduce((s,e)=>s+calcTotal(e).total,0);return{'Invoice No':inv,'Containers':entries.length,'Container Nos':entries.map(e=>e.containerNo).join(', '),'Amount (RO)':+total.toFixed(2),'Status':'Unpaid'}});
+  if(!rows.length){alert('No unpaid invoices for this client.');return}
+  const grand=rows.reduce((s,r)=>s+r['Amount (RO)'],0);
+  rows.push({});rows.push({'Invoice No':'TOTAL','Amount (RO)':+grand.toFixed(2)});
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:16},{wch:12},{wch:50},{wch:14},{wch:10}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Pending Payment');
+  XLSX.writeFile(wb,`${c?c.name:'Client'}_PendingPayment_${today()}.xlsx`);
+}
+
+// Portal-safe entry row (no invoice/financial/action columns)
+function entryRowPortal(e){
+  const isCross=e.op==='cross';
+  const statusBadge=isCross?'<span class="badge badge-cross">Cross-load</span>':'<span class="badge badge-out">Loaded</span>';
+  return`<tr>
+    <td><strong>${esc(e.containerNo)}</strong>${e.remarks?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(e.remarks)}</div>`:''}</td>
+    <td>${fmt(e.unloadDate)}</td>
+    <td>${fmt(e.loadDate)}</td>
+    <td style="text-align:center">${calcTotal(e).days}</td>
+    <td>${statusBadge}</td>
+  </tr>`;
+}
+function portalTableWrap(rows){
+  return`<div class="overflow-x"><table>
+    <thead><tr><th>Container No.</th><th>Gate In</th><th>Gate Out</th><th style="text-align:center">Days</th><th>Status</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="5" class="empty">No records found.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+// Rendering helpers
+function entryRow(e){
+  const inYard=!e.deleted&&e.op==='unload'&&!e.loaded;
+  const isCross=e.op==='cross';
+  const r=calcTotal(e);
+  const opBadge=isCross?'<span class="badge badge-cross">Cross-load</span>':inYard?'<span class="badge badge-in">In yard</span>':'<span class="badge badge-out">Loaded</span>';
+  const invCell=e.invoiced
+    ?`<span class="badge badge-inv" style="cursor:pointer" onclick="selectInvoiceGroup('${esc(e.invoiceNo)}')">${esc(e.invoiceNo)}</span>
+      <span class="badge ${e.paidDate?'badge-paid':'badge-unpaid'}" onclick="togglePaid('${e.id}')">${e.paidDate?'Paid '+fmt(e.paidDate):'Unpaid'}</span>
+      <button class="btn btn-sm" onclick="unmarkInvoice('${e.id}')">✕</button>`
+    :(e.loaded||isCross?`<button class="btn btn-sm" onclick="openInvModal('${e.id}')">Mark invoiced</button>`:
+    '<span style="font-size:13px;font-weight:600;color:var(--text2)">In yard</span>');
+  return`<tr>
+    <td><input type="checkbox" ${selectedInvoices.has(e.id)?'checked':''} onchange="toggleInvoiceSelection('${e.id}',this.checked)"></td>
+    <td><strong>${esc(e.containerNo)}</strong>${e.remarks?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(e.remarks)}</div>`:''}</td>
+    <td>${esc(clientName(e.clientId))}</td>
+    <td>${fmt(e.unloadDate)}</td>
+    <td>${fmt(e.loadDate)}</td>
+    <td style="text-align:center">${r.days}</td>
+    <td>${opBadge}</td>
+    <td>${e.createdBy?`<span style="font-size:11px;color:var(--text2)">${esc(e.createdBy)}</span>`:'–'}</td>
+    <td>${invCell}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-sm" onclick="openEditModal('${e.id}')" title="Edit">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteEntry('${e.id}')" title="Delete">🗑</button>
+    </td>
+  </tr>`;
+}
+
+function yardRow(e){
+  const r=calcTotal(e);
+  return`<tr>
+    <td><input type="checkbox" ${selectedLoad.has(e.id)?'checked':''} onchange="toggleLoadSelection('${e.id}',this.checked)"></td>
+    <td><strong>${esc(e.containerNo)}</strong>${e.remarks?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(e.remarks)}</div>`:''}</td>
+    <td>${esc(clientName(e.clientId))}</td>
+    <td>${fmt(e.unloadDate)}</td>
+    <td style="text-align:center">${r.days}</td>
+    <td><span class="badge badge-in">In Yard</span></td>
+    <td><button class="btn btn-sm" onclick="markLoaded('${e.id}')">Loaded</button></td>
+  </tr>`;
+}
+
+// Sort state for main tables
+let allSort={col:'unloadDate',dir:'desc'};
+let yardSort={col:'unloadDate',dir:'asc'};
+
+function thSort(state,col,label,opts={}){
+  const active=state.col===col;
+  const arrow=active?(state.dir==='asc'?'▲':'▼'):'⇅';
+  const style=`cursor:pointer;user-select:none;white-space:nowrap;${opts.center?'text-align:center;':''}${active?'color:var(--primary)':'color:var(--text2)'}`;
+  return`<th style="${style}" onclick="${opts.fn||'sortAll'}('${col}')">${label} <span style="font-size:10px">${arrow}</span></th>`;
+}
+
+function tableWrap(rows,tfoot){
+  const s=allSort;
+  return`<div class="overflow-x"><table>
+    <thead><tr>
+      <th style="width:40px"></th>
+      ${thSort(s,'containerNo','Container no.',{fn:'sortAll'})}
+      ${thSort(s,'clientId','Client',{fn:'sortAll'})}
+      ${thSort(s,'unloadDate','Gate In',{fn:'sortAll'})}
+      ${thSort(s,'loadDate','Gate Out',{fn:'sortAll'})}
+      <th style="text-align:center">Days</th>
+      <th>Status</th>
+      <th>By</th>
+      <th>Invoice</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows||'<tr><td colspan="10" class="empty">No records found.</td></tr>'}</tbody>${tfoot||''}
+  </table></div>`;
+}
+function yardTableWrap(rows){
+  const s=yardSort;
+  return`<div class="overflow-x"><table>
+    <thead><tr>
+      <th style="width:40px"><input type="checkbox" onchange="toggleSelectAllLoad(this.checked)"></th>
+      ${thSort(s,'containerNo','Container no.',{fn:'sortYard'})}
+      ${thSort(s,'clientId','Client',{fn:'sortYard'})}
+      ${thSort(s,'unloadDate','Gate In',{fn:'sortYard'})}
+      <th style="text-align:center">Days</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr></thead>
+    <tbody>${rows||'<tr><td colspan="7" class="empty">No records found.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+// Tab renders
+function renderStats(){
+  let data=DB.filter(e=>!e.deleted);
+  if(globalClientFilter)data=data.filter(e=>e.clientId===globalClientFilter);
+  const inYard=data.filter(e=>e.op==='unload'&&!e.loaded).length;
+  const pendingUL=data.filter(e=>e.op==='unload'&&e.loaded&&!e.invoiced).length;
+  const pendingCross=data.filter(e=>e.op==='cross'&&!e.invoiced).length;
+  const clientCount=CLIENTS.filter(c=>!c.deleted).length;
+  const invGroups={};data.filter(e=>e.invoiced&&e.invoiceNo).forEach(e=>{(invGroups[e.invoiceNo]=invGroups[e.invoiceNo]||[]).push(e)});
+  const unpaidInvoices=Object.values(invGroups).filter(g=>g.some(e=>!e.paidDate)).length;
+  const unpaidAmt=data.filter(e=>e.invoiced&&!e.paidDate).reduce((s,e)=>s+calcTotal(e).total,0);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat" onclick="switchTab('yard',document.getElementById('tab-btn-yard'))"><div class="stat-label">In Yard</div><div class="stat-num" style="color:#1D9E75">${inYard}</div></div>
+    <div class="stat" onclick="switchTab('pending',document.getElementById('tab-btn-pending'))"><div class="stat-label">Unload+Load Pending</div><div class="stat-num" style="color:#BA7517">${pendingUL}</div></div>
+    <div class="stat" onclick="switchTab('pending',document.getElementById('tab-btn-pending'))"><div class="stat-label">Cross-Load Pending</div><div class="stat-num" style="color:#2563EB">${pendingCross}</div></div>
+    <div class="stat" onclick="switchTab('pending',document.getElementById('tab-btn-pending'))"><div class="stat-label">Total Pending</div><div class="stat-num" style="color:#E24B4A">${pendingUL+pendingCross}</div></div>
+    <div class="stat" onclick="switchTab('unpaid',document.getElementById('tab-btn-unpaid'))"><div class="stat-label">Unpaid Invoices</div><div class="stat-num" style="color:#B3261E">${unpaidInvoices}</div><div style="font-size:11px;color:#B3261E">RO ${unpaidAmt.toFixed(2)}</div></div>
+    <div class="stat" onclick="switchTab('clients',document.getElementById('tab-btn-clients'))"><div class="stat-label">Clients</div><div class="stat-num">${clientCount}</div></div>`;
+}
+
+function applySortEntries(arr,state){
+  const{col,dir}=state;
+  return [...arr].sort((a,b)=>{
+    let av,bv;
+    if(col==='clientId'){av=clientName(a.clientId)||'';bv=clientName(b.clientId)||'';}
+    else{av=a[col]||'';bv=b[col]||'';}
+    const cmp=av<bv?-1:av>bv?1:0;
+    return dir==='asc'?cmp:-cmp;
+  });
+}
+
+function sortAll(col){
+  if(allSort.col===col)allSort.dir=allSort.dir==='asc'?'desc':'asc';
+  else{allSort={col,dir:'asc'};}
+  renderAllTable();
+}
+function sortYard(col){
+  if(yardSort.col===col)yardSort.dir=yardSort.dir==='asc'?'desc':'asc';
+  else{yardSort={col,dir:'asc'};}
+  renderYard();
+}
+
+function renderYard(){
+  const data=filterByCl(DB.filter(e=>!e.deleted));
+  let inYard=data.filter(e=>e.op==='unload'&&!e.loaded);
+  const inYardIds=new Set(inYard.map(e=>e.id));
+  selectedLoad.forEach(id=>{if(!inYardIds.has(id))selectedLoad.delete(id)});
+  inYard=applySortEntries(inYard,yardSort);
+  document.getElementById('tab-yard').innerHTML=
+    `<div class="filter-bar"><button id="bulk-load-btn" class="btn btn-primary" onclick="openBulkLoadModal()">Mark Loaded (${selectedLoad.size})</button></div>`+
+    yardTableWrap(inYard.map(e=>yardRow(e)).join(''));
+}
+
+function renderAll(){
+  const clientOpts=CLIENTS.filter(c=>!c.deleted).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('tab-all').innerHTML=`<div class="filter-bar">
+    <button class="btn btn-primary" onclick="bulkInvoiceSelected()">Assign Invoice</button>
+    <button class="btn btn-primary mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button>
+    <button class="btn btn-bulk" onclick="exportBillingSheet()">Export Billing</button>
+    <button class="btn btn-bulk" onclick="exportPendingInvoiceSummary()">Pending Summary</button>
+    <input id="f-search" placeholder="Container / client…" oninput="renderAllTable()" style="width:160px">
+    <select id="f-status" onchange="renderAllTable()"><option value="">All statuses</option><option value="inyard">In yard</option><option value="departed">Departed</option><option value="cross">Cross-load</option></select>
+    <select id="f-inv2" onchange="renderAllTable()"><option value="">All</option><option value="0">Not invoiced</option><option value="1">Invoiced</option></select>
+    <select id="f-cl2" onchange="renderAllTable()"><option value="">All clients</option>${clientOpts}</select>
+  </div><div id="all-table"></div>`;
+  renderAllTable();
+}
+function renderAllTable(){
+  let data=DB.filter(e=>!e.deleted);
+  if(globalClientFilter)data=data.filter(e=>e.clientId===globalClientFilter);
+  const search=(document.getElementById('f-search')?.value||'').toLowerCase();
+  const status=document.getElementById('f-status')?.value||'';
+  const inv=document.getElementById('f-inv2')?.value||'';
+  const cl=document.getElementById('f-cl2')?.value||'';
+  if(search)data=data.filter(e=>e.containerNo.toLowerCase().includes(search)||(clientName(e.clientId)||'').toLowerCase().includes(search));
+  if(status==='inyard')data=data.filter(e=>e.op==='unload'&&!e.loadDate);
+  else if(status==='departed')data=data.filter(e=>e.op==='unload'&&e.loadDate);
+  else if(status==='cross')data=data.filter(e=>e.op==='cross');
+  if(inv==='0')data=data.filter(e=>!e.invoiced);
+  if(inv==='1')data=data.filter(e=>e.invoiced);
+  if(cl)data=data.filter(e=>e.clientId===cl);
+  data=applySortEntries(data,allSort);
+  document.getElementById('all-table').innerHTML=tableWrap(data.map(e=>entryRow(e)).join(''));
+}
+
+function renderPending(){
+  const clientOpts=CLIENTS.filter(c=>!c.deleted).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('tab-pending').innerHTML=`<div class="filter-bar">
+    <button class="btn btn-primary" onclick="bulkInvoiceSelected()">Assign Invoice to Selected</button>
+    <button class="btn btn-primary mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button>
+    <button class="btn btn-bulk" onclick="exportBillingSheet()">Export Billing Excel</button>
+    <select id="f-pend-cl" onchange="renderPendingFiltered()"><option value="">All clients</option>${clientOpts}</select>
+  </div><div id="pending-table"></div>`;
+  renderPendingFiltered();
+}
+function renderPendingFiltered(){
+  const cl=document.getElementById('f-pend-cl')?.value||'';
+  let data=filterByCl(DB.filter(e=>!e.deleted&&!e.invoiced&&(e.op==='cross'||(e.op==='unload'&&e.loaded))));
+  if(cl)data=data.filter(e=>e.clientId===cl);
+  data.sort((a,b)=>(a.unloadDate||'').localeCompare(b.unloadDate||''));
+  const total=data.reduce((s,e)=>s+calcTotal(e).total,0);
+  const tfoot=data.length?`<tfoot><tr class="tfoot-row"><td colspan="7">Pending total</td><td>RO ${total.toFixed(2)}</td><td></td></tr></tfoot>`:'';
+  document.getElementById('pending-table').innerHTML=tableWrap(data.map(e=>entryRow(e)).join(''),tfoot);
+}
+
+function renderInvoiced(){
+  document.getElementById('tab-invoiced').innerHTML=`<div class="filter-bar">
+    <button class="btn btn-primary mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button>
+    <select id="f-paid" onchange="renderInvoicedTable()"><option value="">All</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option></select>
+  </div><div id="invoiced-table"></div>`;
+  renderInvoicedTable();
+}
+function renderInvoicedTable(){
+  const pf=document.getElementById('f-paid')?.value||'';
+  let data=filterByCl(DB.filter(e=>!e.deleted&&e.invoiced));
+  if(pf==='paid')data=data.filter(e=>e.paidDate);
+  if(pf==='unpaid')data=data.filter(e=>!e.paidDate);
+  data.sort((a,b)=>(b.invoiceNo||'').localeCompare(a.invoiceNo||''));
+  const total=data.reduce((s,e)=>s+calcTotal(e).total,0);
+  const tfoot=data.length?`<tfoot><tr class="tfoot-row"><td colspan="7">Total invoiced</td><td>RO ${total.toFixed(2)}</td><td></td></tr></tfoot>`:'';
+  document.getElementById('invoiced-table').innerHTML=tableWrap(data.map(e=>entryRow(e)).join(''),tfoot);
+}
+
+function renderPayments(){
+  const clientOpts=CLIENTS.filter(c=>!c.deleted).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('tab-payments').innerHTML=`<div class="filter-bar">
+    <button class="btn btn-primary mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button>
+    <button class="btn btn-bulk" onclick="exportPendingPaymentExcel()">Export Excel</button>
+    <select id="f-pay-status" onchange="renderPaymentsTable()"><option value="">All</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select>
+    <select id="f-pay-cl" onchange="renderPaymentsTable()"><option value="">All clients</option>${clientOpts}</select>
+  </div><div id="payments-table"></div>`;
+  renderPaymentsTable();
+}
+function renderPaymentsTable(){
+  const pf=document.getElementById('f-pay-status')?.value||'';
+  const cl=document.getElementById('f-pay-cl')?.value||'';
+  let data=filterByCl(DB.filter(e=>!e.deleted&&e.invoiced&&e.invoiceNo));
+  if(cl)data=data.filter(e=>e.clientId===cl);
+  const groups={};data.forEach(e=>{(groups[e.invoiceNo]=groups[e.invoiceNo]||[]).push(e)});
+  let groupArr=Object.entries(groups).map(([inv,entries])=>{
+    const isPaid=entries.every(e=>e.paidDate),total=entries.reduce((s,e)=>s+calcTotal(e).total,0),paidDate=isPaid?entries.map(e=>e.paidDate).sort().pop():'';
+    return{inv,entries,isPaid,total,paidDate,cId:entries[0].clientId};
+  });
+  if(pf==='paid')groupArr=groupArr.filter(g=>g.isPaid);
+  if(pf==='unpaid')groupArr=groupArr.filter(g=>!g.isPaid);
+  groupArr.sort((a,b)=>String(b.inv).localeCompare(String(a.inv)));
+  const grandTotal=groupArr.reduce((s,g)=>s+g.total,0);
+  const unpaidTotal=groupArr.filter(g=>!g.isPaid).reduce((s,g)=>s+g.total,0);
+  const rows=groupArr.map(g=>{
+    const allSel=g.entries.length>0&&g.entries.every(e=>selectedInvoices.has(e.id));
+    return`<tr>
+      <td><input type="checkbox" ${allSel?'checked':''} onchange="toggleGroupSelect('${esc(g.inv)}',this.checked)"></td>
+      <td><strong>${esc(g.inv)}</strong></td>
+      <td>${esc(clientName(g.cId))}</td>
+      <td style="text-align:center">${g.entries.length}</td>
+      <td><strong>RO ${g.total.toFixed(2)}</strong></td>
+      <td><span class="badge ${g.isPaid?'badge-paid':'badge-unpaid'}" style="cursor:pointer" onclick="bulkToggleInvoicePaid('${esc(g.inv)}')">${g.isPaid?'Paid '+fmt(g.paidDate):'Unpaid — click to mark paid'}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${g.entries.map(e=>esc(e.containerNo)).join(', ')}</td>
+    </tr>`;
+  }).join('');
+  const tfoot=groupArr.length?`<tfoot><tr class="tfoot-row"><td colspan="4">Grand total</td><td>RO ${grandTotal.toFixed(2)}</td><td colspan="2"></td></tr><tr class="tfoot-row" style="color:#B3261E"><td colspan="4">Unpaid total</td><td>RO ${unpaidTotal.toFixed(2)}</td><td colspan="2"></td></tr></tfoot>`:'';
+  document.getElementById('payments-table').innerHTML=`<div class="overflow-x"><table><thead><tr><th style="width:36px"></th><th>Invoice No.</th><th>Client</th><th style="text-align:center">Containers</th><th>Amount</th><th>Status</th><th>Container nos.</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">No invoices found.</td></tr>'}</tbody>${tfoot}</table></div>`;
+}
+
+function renderUnpaid(){
+  const clientOpts=CLIENTS.filter(c=>!c.deleted).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('tab-unpaid').innerHTML=`<div class="filter-bar">
+    <button class="btn btn-primary mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button>
+    <button class="btn btn-bulk" onclick="exportPendingPaymentExcel()">Export Excel</button>
+    <select id="f-unpaid-cl" onchange="renderUnpaidTable()"><option value="">All clients</option>${clientOpts}</select>
+  </div><div id="unpaid-table"></div>`;
+  renderUnpaidTable();
+}
+function renderUnpaidTable(){
+  const cl=document.getElementById('f-unpaid-cl')?.value||'';
+  let data=filterByCl(DB.filter(e=>!e.deleted&&e.invoiced&&e.invoiceNo&&!e.paidDate));
+  if(cl)data=data.filter(e=>e.clientId===cl);
+  const groups={};data.forEach(e=>{(groups[e.invoiceNo]=groups[e.invoiceNo]||[]).push(e)});
+  const groupArr=Object.entries(groups).map(([inv,entries])=>({inv,entries,total:entries.reduce((s,e)=>s+calcTotal(e).total,0),cId:entries[0].clientId})).sort((a,b)=>String(b.inv).localeCompare(String(a.inv)));
+  const grandTotal=groupArr.reduce((s,g)=>s+g.total,0);
+  const rows=groupArr.map(g=>{
+    const allSel=g.entries.every(e=>selectedInvoices.has(e.id));
+    return`<tr>
+      <td><input type="checkbox" ${allSel?'checked':''} onchange="toggleGroupSelect('${esc(g.inv)}',this.checked)"></td>
+      <td><strong>${esc(g.inv)}</strong></td>
+      <td>${esc(clientName(g.cId))}</td>
+      <td style="text-align:center">${g.entries.length}</td>
+      <td><strong>RO ${g.total.toFixed(2)}</strong></td>
+      <td><span class="badge badge-unpaid" style="cursor:pointer" onclick="bulkToggleInvoicePaid('${esc(g.inv)}')">Unpaid — click to mark paid</span></td>
+      <td style="font-size:12px;color:var(--text2)">${g.entries.map(e=>esc(e.containerNo)).join(', ')}</td>
+    </tr>`;
+  }).join('');
+  const tfoot=groupArr.length?`<tfoot><tr class="tfoot-row"><td colspan="4">Total unpaid</td><td>RO ${grandTotal.toFixed(2)}</td><td colspan="2"></td></tr></tfoot>`:'';
+  document.getElementById('unpaid-table').innerHTML=`<div class="overflow-x"><table><thead><tr><th style="width:36px"></th><th>Invoice No.</th><th>Client</th><th style="text-align:center">Containers</th><th>Amount</th><th>Status</th><th>Container nos.</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">No unpaid invoices.</td></tr>'}</tbody>${tfoot}</table></div>`;
+}
+
+function renderClients(){
+  // In portal mode the client list is never shown — only the detail panel matters
+  if(isClientPortal()){
+    // Ensure the tab-clients div is empty (detail panel gets appended separately)
+    const tc=document.getElementById('tab-clients');
+    if(tc&&!document.getElementById('client-detail-panel'))tc.innerHTML='';
+    return;
+  }
+  const active=CLIENTS.filter(c=>!c.deleted).sort((a,b)=>a.name.localeCompare(b.name));
+
+  function clientRowHtml(c,i){
+    const ai=i%AV_BG.length;
+    const txAll=DB.filter(e=>!e.deleted&&e.clientId===c.id);
+    const inYard=txAll.filter(e=>e.op==='unload'&&!e.loaded).length;
+    const totalBilled=txAll.filter(e=>e.invoiced).reduce((s,e)=>s+calcTotal(e).total,0);
+    const pendingAmt=txAll.filter(e=>!e.invoiced&&(e.loaded||e.op==='cross')).reduce((s,e)=>s+calcTotal(e).total,0);
+    const unpaidAmt=txAll.filter(e=>e.invoiced&&!e.paidDate).reduce((s,e)=>s+calcTotal(e).total,0);
+    const lastLoadedTx=txAll.filter(e=>e.loadDate).sort((a,b)=>(b.loadDate||'').localeCompare(a.loadDate||''));
+    const lastLoaded=lastLoadedTx.length?lastLoadedTx[0].loadDate:'';
+    const actionBtns=`<button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="exportClientInYardExcel('${c.id}')">📊 In-Yard XLS</button>
+         <button class="btn btn-sm btn-client" onclick="openClientDetail('${c.id}')">📋 Detail</button>
+         <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="copyClientLink('${c.id}')">🔗 Client Link</button>
+         <button class="btn btn-sm" onclick="openClientModal('${c.id}')">✏️</button>
+         <button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}')">🗑</button>`;
+    return`<div class="client-row">
+      <div class="client-avatar" style="background:${AV_BG[ai]};color:${AV_TX[ai]}">${initials(c.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500;font-size:14px">${esc(c.name)}</div>
+        <div class="client-summary">
+          <span style="color:#1D9E75">${inYard} in yard</span> &bull; ${txAll.length} total &bull;
+          Last loaded: ${lastLoaded?fmt(lastLoaded):'–'} &bull; RO ${totalBilled.toFixed(2)} billed &bull;
+          <span style="color:#BA7517">RO ${pendingAmt.toFixed(2)} pending</span> &bull;
+          <span style="color:#B3261E">RO ${unpaidAmt.toFixed(2)} unpaid</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">${actionBtns}</div>
+    </div>`;
+  }
+
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div style="font-size:15px;font-weight:500">Clients (${active.length})</div>
+    <button class="btn btn-primary btn-sm" onclick="openClientModal(null)">+ Add Client</button>
+  </div>`;
+
+  if(!active.length)html+='<div class="empty">No clients.</div>';
+  else active.forEach((c,i)=>{html+=clientRowHtml(c,i)});
+
+  document.getElementById('tab-clients').innerHTML=html;
+  if(window._detailClientId)renderClientDetail(window._detailClientId,window._detailTab||'inyard');
+}
+
+function openClientDetail(cid,tab){
+  window._detailClientId=cid;window._detailTab=tab||'inyard';
+  if(currentTab!=='clients'){switchTab('clients',document.getElementById('tab-btn-clients'));return}
+  renderClientDetail(cid,window._detailTab);
+}
+function setDetailTab(cid,tab){window._detailClientId=cid;window._detailTab=tab;renderClientDetail(cid,tab)}
+function closeClientDetail(){window._detailClientId=null;window._detailTab=null;const p=document.getElementById('client-detail-panel');if(p)p.remove()}
+
+function renderClientDetail(cid,tab){
+  if(!cid)return;
+  const portal=isClientPortal();
+  tab=tab||'inyard';
+  // Portal mode: restrict to safe tabs only
+  if(portal&&tab!=='inyard'&&tab!=='completed')tab='inyard';
+  const c=clientById(cid);if(!c)return;
+  const ai=CLIENTS.filter(x=>!x.deleted).findIndex(x=>x.id===cid)%AV_BG.length;
+  const txAll=DB.filter(e=>!e.deleted&&e.clientId===cid);
+  const inYardRows=txAll.filter(e=>e.op==='unload'&&!e.loaded);
+  const completedRows=txAll.filter(e=>e.op==='unload'&&e.loaded).sort((a,b)=>(b.loadDate||'').localeCompare(a.loadDate||''));
+  const allRows=[...txAll].sort((a,b)=>(b.unloadDate||'').localeCompare(a.unloadDate||''));
+  const pendingRows=txAll.filter(e=>!e.invoiced&&(e.op==='cross'||(e.op==='unload'&&e.loaded)));
+  const invoicedRows=txAll.filter(e=>e.invoiced);
+  const unpaidInvGroups={};
+  invoicedRows.filter(e=>!e.paidDate&&e.invoiceNo).forEach(e=>{(unpaidInvGroups[e.invoiceNo]=unpaidInvGroups[e.invoiceNo]||[]).push(e)});
+  const TABS=portal?[
+    ['inyard',`In Yard (${inYardRows.length})`],
+    ['completed',`Completed (${completedRows.length})`]
+  ]:[
+    ['inyard',`In Yard (${inYardRows.length})`],
+    ['alltx',`All Transactions (${txAll.length})`],
+    ['pending',`Pending Invoice (${pendingRows.length})`],
+    ['invoiced',`Invoiced (${invoicedRows.length})`],
+    ['ppay',`Pending Payment (${Object.keys(unpaidInvGroups).length} inv)`]
+  ];
+  const tabBtns=TABS.map(([id,lbl])=>`<button class="cdp-tab${tab===id?' active':''}" onclick="setDetailTab('${cid}','${id}')">${lbl}</button>`).join('');
+  let bodyHtml='';
+  if(tab==='inyard'){
+    bodyHtml=`<div style="margin-bottom:.75rem;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-bulk btn-sm" onclick="exportClientInYardExcel('${cid}')">📊 Export Excel</button></div>`+(inYardRows.length?yardTableWrap(inYardRows.map(e=>yardRow(e)).join('')):'<div class="empty">No containers in yard.</div>');
+  }else if(tab==='completed'){
+    bodyHtml=`<div style="margin-bottom:.75rem;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-bulk btn-sm" onclick="exportClientCompletedExcel('${cid}')">📊 Export Excel</button></div>`+(completedRows.length?portalTableWrap(completedRows.map(e=>entryRowPortal(e)).join('')):'<div class="empty">No completed containers.</div>');
+  }else if(tab==='alltx'){
+    const total=allRows.reduce((s,e)=>s+calcTotal(e).total,0);
+    const tfoot=allRows.length?`<tfoot><tr class="tfoot-row"><td colspan="7">Total</td><td>RO ${total.toFixed(2)}</td><td></td></tr></tfoot>`:'';
+    bodyHtml=`<div style="margin-bottom:.75rem"><button class="btn btn-primary btn-sm" onclick="bulkInvoiceSelected()">Assign Invoice to Selected</button></div>`+tableWrap(allRows.map(e=>entryRow(e)).join(''),tfoot);
+  }else if(tab==='pending'){
+    const sorted=[...pendingRows].sort((a,b)=>(a.unloadDate||'').localeCompare(b.unloadDate||''));
+    const total=sorted.reduce((s,e)=>s+calcTotal(e).total,0);
+    const tfoot=sorted.length?`<tfoot><tr class="tfoot-row"><td colspan="7">Total</td><td>RO ${total.toFixed(2)}</td><td></td></tr></tfoot>`:'';
+    bodyHtml=`<div style="margin-bottom:.75rem;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="bulkInvoiceSelected()">Assign Invoice</button><button class="btn btn-bulk btn-sm" onclick="exportClientBillingExcel('${cid}')">📊 Billing XLS</button></div>`+(sorted.length?tableWrap(sorted.map(e=>entryRow(e)).join(''),tfoot):'<div class="empty">No containers pending invoice.</div>');
+  }else if(tab==='invoiced'){
+    const sorted=[...invoicedRows].sort((a,b)=>(b.invoiceNo||'').localeCompare(a.invoiceNo||''));
+    const total=sorted.reduce((s,e)=>s+calcTotal(e).total,0);
+    const tfoot=sorted.length?`<tfoot><tr class="tfoot-row"><td colspan="7">Total invoiced</td><td>RO ${total.toFixed(2)}</td><td></td></tr></tfoot>`:'';
+    bodyHtml=`<div style="margin-bottom:.75rem"><button class="btn btn-primary btn-sm mark-paid-count-btn" onclick="bulkMarkPaid()">Mark Paid (${selectedInvoices.size})</button></div>`+(sorted.length?tableWrap(sorted.map(e=>entryRow(e)).join(''),tfoot):'<div class="empty">No invoiced containers.</div>');
+  }else if(tab==='ppay'){
+    const groupArr=Object.entries(unpaidInvGroups).map(([inv,entries])=>({inv,entries,total:entries.reduce((s,e)=>s+calcTotal(e).total,0)})).sort((a,b)=>String(b.inv).localeCompare(String(a.inv)));
+    const grandTotal=groupArr.reduce((s,g)=>s+g.total,0);
+    const rows=groupArr.map(g=>`<tr>
+      <td><strong>${esc(g.inv)}</strong></td>
+      <td style="text-align:center">${g.entries.length}</td>
+      <td><strong>RO ${g.total.toFixed(2)}</strong></td>
+      <td><span class="badge badge-unpaid" style="cursor:pointer" onclick="markInvoicePaidFromDetail('${esc(g.inv)}','${cid}')">Unpaid — click to mark paid</span></td>
+      <td style="font-size:12px;color:var(--text2)">${g.entries.map(e=>esc(e.containerNo)).join(', ')}</td>
+    </tr>`).join('');
+    const tfoot=groupArr.length?`<tfoot><tr class="tfoot-row"><td colspan="2">Unpaid total</td><td>RO ${grandTotal.toFixed(2)}</td><td colspan="2"></td></tr></tfoot>`:'';
+    bodyHtml=`<div style="margin-bottom:.75rem"><button class="btn btn-bulk btn-sm" onclick="exportClientPendingPaymentExcel('${cid}')">📊 Export Excel</button></div>
+    <div class="overflow-x"><table><thead><tr><th>Invoice No.</th><th style="text-align:center">Containers</th><th>Amount</th><th>Status</th><th>Container nos.</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="empty">No unpaid invoices.</td></tr>'}</tbody>${tfoot}</table></div>`;
+  }
+  let panel=document.getElementById('client-detail-panel');
+  if(!panel){panel=document.createElement('div');panel.id='client-detail-panel';panel.className='client-detail-panel';document.getElementById('tab-clients').appendChild(panel)}
+  const totalBilled2=invoicedRows.reduce((s,e)=>s+calcTotal(e).total,0);
+  const unpaidAmt2=invoicedRows.filter(e=>!e.paidDate).reduce((s,e)=>s+calcTotal(e).total,0);
+  panel.innerHTML=`
+    <div class="cdp-header">
+      <div class="client-avatar" style="background:${AV_BG[ai]};color:${AV_TX[ai]};width:40px;height:40px;font-size:14px">${initials(c.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:15px">${esc(c.name)}</div>
+        <div style="font-size:12px;color:var(--text2)">
+          ${portal
+            ? `<span style="color:#1D9E75">${inYardRows.length} in yard</span> &bull; ${completedRows.length} completed`
+            : `<span style="color:#1D9E75">${inYardRows.length} in yard</span> &bull;
+               <span style="color:#BA7517">${pendingRows.length} pending invoice</span> &bull;
+               RO ${totalBilled2.toFixed(2)} billed &bull;
+               <span style="color:#B3261E">RO ${unpaidAmt2.toFixed(2)} unpaid</span> &bull;
+               ${txAll.length} total transactions`
+          }
+        </div>
+      </div>
+      ${portal?'':`<button class="btn btn-sm" onclick="closeClientDetail()">✕ Close</button>`}
+    </div>
+    <div class="cdp-tabs">${tabBtns}</div>
+    <div class="cdp-body">${bodyHtml}</div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderRates(){
+  document.getElementById('tab-rates').innerHTML=`
+    <div style="font-size:15px;font-weight:500;margin-bottom:1rem">Storage rate</div>
+    <table style="max-width:360px;margin-bottom:1.25rem"><thead><tr><th>Period</th><th>Rate per day</th></tr></thead><tbody>
+      <tr><td>Every day in yard</td><td>RO ${STORAGE_RATE.toFixed(2)}</td></tr>
+      <tr><td>Same-day gate in &amp; gate out</td><td>RO 0.00 (no charge)</td></tr>
+    </tbody></table>
+    <div style="height:0.5px;background:var(--border);margin:1rem 0"></div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:1rem">Operation charges</div>
+    <table style="max-width:360px"><thead><tr><th>Operation</th><th>Charge</th></tr></thead><tbody>
+      <tr><td>Unloading only</td><td>RO ${OP_UNLOAD.toFixed(2)}</td></tr>
+      <tr><td>Loading only</td><td>RO ${OP_UNLOAD.toFixed(2)}</td></tr>
+      <tr><td>Unloading + loading</td><td>RO ${(OP_UNLOAD*2).toFixed(2)}</td></tr>
+      <tr><td>Cross-loading</td><td>RO ${OP_CROSS.toFixed(2)}</td></tr>
+    </tbody></table>
+    <div style="height:0.5px;background:var(--border);margin:1rem 0"></div>
+    <div style="font-size:12px;color:var(--text2)">Storage accrues per calendar day from unload to load date (minimum 1 day when dates differ). Cross-loading containers accrue no storage charge.</div>`;
+}
+
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['yard','all','pending','invoiced','payments','unpaid','clients','rates'].forEach(t=>{
+    const e=document.getElementById('tab-'+t);if(e)e.style.display=(t===tab?'block':'none');
+  });
+  render();
+}
+
+function render(){
+  renderStats();
+  if(isClientPortal()){
+    // Portal mode: always show clients tab → client detail only
+    if(currentTab!=='clients'){
+      currentTab='clients';
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      const yardBtn=document.getElementById('tab-btn-yard');
+      if(yardBtn)yardBtn.classList.add('active');
+      ['yard','all','pending','invoiced','payments','unpaid','clients','rates'].forEach(t=>{
+        const el=document.getElementById('tab-'+t);if(el)el.style.display=(t==='clients'?'block':'none');
+      });
+    }
+    renderClients();
+    if(window._portalClientId){
+      renderClientDetail(window._portalClientId,'inyard');
+    }
+    return;
+  }
+  if(currentTab==='yard')renderYard();
+  else if(currentTab==='all')renderAll();
+  else if(currentTab==='pending')renderPending();
+  else if(currentTab==='invoiced')renderInvoiced();
+  else if(currentTab==='payments')renderPayments();
+  else if(currentTab==='unpaid')renderUnpaid();
+  else if(currentTab==='clients')renderClients();
+  else if(currentTab==='rates')renderRates();
+}
+
+// Boot: portal mode bypasses login; otherwise check for saved user
+(function(){
+  if(!window._IS_CLIENT_PORTAL){
+    // Normal mode — auto-start if user already selected
+    (async function(){
+      if(activeUser)await startApp();
+    })();
+  }
+  // Portal mode auto-start is handled by the IIFE above near selectUser()
+})();
+</script>
+</body>
+</html>
