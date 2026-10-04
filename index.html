@@ -152,6 +152,7 @@ body.client-portal .global-client-filter{display:none!important}
     <button class="btn btn-client" onclick="openClientModal(null)">+ Add Client</button>
     <button class="btn btn-primary" onclick="openAddModal()">+ New Entry</button>
     <button class="btn btn-bulk" onclick="openBulkModal()">⊞ Bulk Entry</button>
+    <button class="btn" style="background:#0d9488;color:#fff;border:none" onclick="openBulkLoadListModal()">⊞ Bulk Load</button>
     <button class="btn" style="background:#7c3aed;color:#fff;border:none" onclick="openImportModal()">↑ Import Excel</button>
     <button id="undo-import-btn" class="btn" style="display:none;background:#b45309;color:#fff;border:none" onclick="undoLastImport()">↩ Undo Import</button>
     <span id="active-user-label" style="font-size:12px;font-weight:600;color:var(--text2);padding:0 4px"></span>
@@ -224,6 +225,21 @@ body.client-portal .global-client-filter{display:none!important}
     <div class="modal-btns">
       <button class="btn" onclick="closeModal('modal-bulk')">Cancel</button>
       <button class="btn btn-primary" id="bulk-save-btn" style="display:none" onclick="saveBulkEntries()">Save All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Load (paste list) Modal -->
+<div id="modal-bulk-load-list" class="modal-overlay">
+  <div class="modal" style="width:560px">
+    <div class="modal-title">Bulk Load — mark containers as loaded</div>
+    <div class="field" style="margin-bottom:10px"><label>Default Load Date</label><input id="bll-date" type="date"></div>
+    <div class="field"><label>Container Numbers (one per line)</label><textarea id="bll-list" style="height:160px" placeholder="REGU1235760&#10;REGU3228672&#10;TGBU8071201"></textarea></div>
+    <button class="btn" style="margin-top:8px" onclick="previewBulkLoadList()">Generate Preview</button>
+    <div id="bll-preview" style="margin-top:10px"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal('modal-bulk-load-list')">Cancel</button>
+      <button class="btn btn-primary" id="bll-save-btn" style="display:none" onclick="saveBulkLoadList()">Mark All Loaded</button>
     </div>
   </div>
 </div>
@@ -801,6 +817,69 @@ async function saveBulkLoad(){
   selectedLoad.clear();
   closeModal('modal-bulk-load');setSyncStatus('saved');render();
   alert(`Marked ${updates.length} container(s) as loaded.`);
+}
+
+let bllMatches=[];
+function openBulkLoadListModal(){
+  document.getElementById('bll-list').value='';
+  document.getElementById('bll-date').value=today();
+  document.getElementById('bll-preview').innerHTML='';
+  document.getElementById('bll-save-btn').style.display='none';
+  bllMatches=[];
+  document.getElementById('modal-bulk-load-list').classList.add('open');
+}
+
+function previewBulkLoadList(){
+  const defDate=document.getElementById('bll-date').value;
+  const nums=document.getElementById('bll-list').value.split(/[\n,;]+/).map(x=>x.toUpperCase().replace(/[\s\-]/g,'')).filter(Boolean);
+  if(!nums.length){alert('Enter at least one container number.');return}
+  const inYard=DB.filter(e=>!e.deleted&&e.op==='unload'&&!e.loaded);
+  const seen=new Set(),notFound=[],repeated=[];
+  bllMatches=[];
+  nums.forEach(n=>{
+    if(seen.has(n)){repeated.push(n);return}
+    seen.add(n);
+    const m=inYard.find(e=>String(e.containerNo).toUpperCase().replace(/[\s\-]/g,'')===n);
+    if(m)bllMatches.push(m);else notFound.push(n);
+  });
+  let html='';
+  if(bllMatches.length){
+    html+='<div style="max-height:250px;overflow-y:auto"><table><thead><tr><th>Container</th><th>Client</th><th>Gate In</th><th>Load Date</th></tr></thead><tbody>';
+    bllMatches.forEach((e,i)=>{
+      html+=`<tr><td><strong>${esc(e.containerNo)}</strong></td><td>${esc(clientName(e.clientId))}</td><td>${fmt(e.unloadDate)}</td><td><input type="date" id="bll-row-date-${i}" value="${defDate}" style="width:140px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text)"></td></tr>`;
+    });
+    html+='</tbody></table></div>';
+  }
+  if(notFound.length)html+=`<div class="info-box" style="background:#fef9c3;color:#a16207">Not found in yard (will be skipped): ${notFound.map(esc).join(', ')}</div>`;
+  if(repeated.length)html+=`<div class="info-box">Repeated in list (ignored): ${repeated.map(esc).join(', ')}</div>`;
+  document.getElementById('bll-preview').innerHTML=html;
+  document.getElementById('bll-save-btn').style.display=bllMatches.length?'':'none';
+  document.getElementById('bll-save-btn').textContent=`Mark ${bllMatches.length} Loaded`;
+}
+
+async function saveBulkLoadList(){
+  const byDate={},bad=[];
+  bllMatches.forEach((e,i)=>{
+    const d=(document.getElementById('bll-row-date-'+i)||{}).value;
+    if(!d){bad.push(e.containerNo+' (no date)');return}
+    if(e.unloadDate&&d<e.unloadDate){bad.push(e.containerNo+' (load date before gate in)');return}
+    (byDate[d]=byDate[d]||[]).push(e);
+  });
+  if(bad.length){alert('Fix these before saving:\n'+bad.join('\n'));return}
+  const total=Object.values(byDate).reduce((s,a)=>s+a.length,0);
+  if(!total)return;
+  setSyncStatus('saving');
+  let done=0,errors=0;
+  for(const[d,list]of Object.entries(byDate)){
+    const{error}=await sb.from('transactions').update({loaded:true,load_date:d}).in('id',list.map(e=>e.id));
+    if(error){errors+=list.length;continue}
+    list.forEach(e=>{e.loaded=true;e.loadDate=d});
+    done+=list.length;
+  }
+  bllMatches=[];
+  closeModal('modal-bulk-load-list');
+  setSyncStatus(errors?'error':'saved');render();
+  alert(`Marked ${done} container(s) as loaded.${errors?`\n⚠ ${errors} failed — please try again.`:''}`);
 }
 
 function openEditModal(id){
