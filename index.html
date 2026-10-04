@@ -864,7 +864,7 @@ function markInvoicePaidFromDetail(invoiceNo,cid){
 
 function copyClientLink(clientId){
   const c=clientById(clientId);
-  const url='https://YOUR-HOST/YOUR-PATH/yard_tracker_new.html?client='+encodeURIComponent(clientId);
+  const url='https://rachitoman.github.io/EMPTYCONTAINERTRACKER/?client='+encodeURIComponent(clientId);
   navigator.clipboard.writeText(url).catch(()=>{const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)});
   alert('Client portal link copied!\n\n'+url+'\n\nSend this to '+(c?c.name:clientId));
 }
